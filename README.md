@@ -7,7 +7,7 @@
 •
   <a href="https://sfrcua.github.io/SCUBA/">Website</a> •
   <a href="https://arxiv.org/abs/2509.26506">Paper</a> •
-  <a href="https://github.com/SalesforceAIResearch/SCUBA/tree/main/testcases">TestCases</a> •
+  <a href="https://github.com/SalesforceAIResearch/SCUBA/blob/main/data">TestCases</a> •
 </p>
 
 <p align="center">
