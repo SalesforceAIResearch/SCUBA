@@ -1,0 +1,58 @@
+[{
+    "Name": "billing_support",
+    "DeveloperName": "billing_support",
+    "Type": "Queue",
+    "DoesSendEmailToMembers": true,
+    "Email": "billing_support@example.com"
+},
+{   "Name": "network_support",
+    "DeveloperName": "network_support",
+    "Type": "Queue",
+    "DoesSendEmailToMembers": false
+},
+{   "Name": "fruit_case_support",
+    "DeveloperName": "fruit_case_support",
+    "Type": "Queue",
+    "DoesSendEmailToMembers": false
+},
+{   "Name": "security_user",
+    "DeveloperName": "security_user",
+    "Type": "Queue",
+    "DoesSendEmailToMembers": false
+},
+{   "Name": "shoe_case_support",
+    "DeveloperName": "shoe_case_support",
+    "Type": "Queue",
+    "DoesSendEmailToMembers": false
+},
+{
+    "Name": "Account Avengers",
+    "DeveloperName": "Account_Avengers",
+    "Type": "Regular",
+    "DoesSendEmailToMembers": false
+},
+{
+    "Name": "Contact Crusaders",
+    "DeveloperName": "Contact_Crusaders",
+    "Type": "Regular",
+    "DoesSendEmailToMembers": false
+},
+{
+    "Name": "Opportunity Oracles",
+    "DeveloperName": "Opportunity_Oracles",
+    "Type": "Regular",
+    "DoesSendEmailToMembers": false
+},
+{
+    "Name": "Case Commandos",
+    "DeveloperName": "Case_Commandos",
+    "Type": "Regular",
+    "DoesSendEmailToMembers": false
+},
+{
+    "Name": "Lead Legends",
+    "DeveloperName": "Lead_Legends",
+    "Type": "Regular",
+    "DoesSendEmailToMembers": false
+}     
+]

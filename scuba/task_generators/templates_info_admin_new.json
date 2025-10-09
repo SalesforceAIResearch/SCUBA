@@ -1,0 +1,82 @@
+{
+  "add_formula_field_with_visibility": {
+    "template_id": "admin_029",
+    "template_string": "Add a formula field with the name {field_name} to the object {object_name}. {field_purpose}. This newly added field should only be visible to {comma_separated_profiles} profiles.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["CustomField"]
+  },
+  "create_validation_rule": {
+    "template_id": "admin_030",
+    "template_string": "Create a validation rule for the {object_name} Object. {error_condition_description}. If the rule is triggered, the error message should be {error_message}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["ValidationRule"]
+  },
+  "picklist_administration_actions": {
+    "template_id": "admin_031",
+    "template_string": "{action_description} {object_name} Object's {field_name} field. {additional_instructions}",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["StandardValueSet"]
+  },
+  "create_global_value_set": {
+    "template_id": "admin_032",
+    "template_string": "Create a global value set with the name {value_set_name} and it should have {comma_separated_values} as the pick list values. Sort the values alphabetically.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["GlobalValueSet"]
+  },
+  "update_password_policies": {
+    "template_id": "admin_033",
+    "template_string": "Update the org's password policies as follows: {comma_separated_policy_conditions}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Settings"]
+  },
+  "create_public_group": {
+    "template_id": "admin_034",
+    "template_string": "Create a Public group with the name {group_name}. Configure the public group members by adding {comma_separated_users_and_roles}.",
+    "prerequisites": {"data":  {"objects":  ["UserRole"]}},
+    "objects": ["Group"],
+    "metadata_types": []
+  },
+  "define_role_hierarchy": {
+    "template_id": "admin_035",
+    "template_string": "{org_hierarchy_description}.",
+    "prerequisites": {},
+    "objects": ["UserRole"],
+    "metadata_types": []
+  },
+  "set_org_wide_sharing_defaults": {
+    "template_id": "admin_036",
+    "template_string": "Set the Org-Wide Sharing Defaults as follows: {comma_separated_sharing_changes}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Settings"]
+  },
+  "create_approval_process_jump_start": {
+    "template_id": "admin_037",
+    "template_string": "Build an approval process for the records in the {object_name} Object using the Jump Start Wizard. Name this process as {approval_process_name}. The entry criteria is set to {entry_criteria_formula}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["ApprovalProcess"]
+  },
+  "configure_approval_process_actions": {
+    "template_id": "admin_038",
+    "template_string": "Configure the {approval_process_name} approval process's final approval actions by adding a new action with the name {final_approval_action_name}, which set the {approval_status_field} field value to {approved_value}. Similarly, add a new action under the final rejection actions with the name {final_rejection_action_name}, which set the field value to {rejected_value}.",
+    "prerequisites": {
+      "metadata": {
+        "types_and_members": {
+          "ApprovalProcess": ["Account.required_account_action",
+          "Campaign.required_campaign_action",
+          "Contact.required_contact_action",
+          "Lead.required_lead_action",
+          "Product2.required_product_action"]
+        }
+      }
+    },
+    "objects": [],
+    "metadata_types": ["ApprovalProcess"]
+  }
+}

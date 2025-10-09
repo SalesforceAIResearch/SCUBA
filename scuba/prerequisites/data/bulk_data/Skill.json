@@ -1,0 +1,38 @@
+[
+{
+    "DeveloperName": "Cloud_Migration",
+    "MasterLabel": "Cloud_Migration"    
+},
+{
+    "DeveloperName": "API_Integration",
+    "MasterLabel": "API_Integration"
+},
+{
+    "DeveloperName": "Security_Auditing",
+    "MasterLabel": "Security_Auditing"
+},
+{
+    "DeveloperName": "Network_Configuration",
+    "MasterLabel": "Network_Configuration"
+},
+{
+    "DeveloperName": "Product_Training",
+    "MasterLabel": "Product_Training"
+},
+{
+    "DeveloperName": "Quality_Assurance",
+    "MasterLabel": "Quality_Assurance"
+},
+{
+    "DeveloperName": "System_Administration",
+    "MasterLabel": "System_Administration"
+},
+{
+    "DeveloperName": "Documentation_Management",
+    "MasterLabel": "Documentation_Management"
+},
+{
+    "DeveloperName": "Data_Analysis",
+    "MasterLabel": "Data_Analysis"
+}
+]

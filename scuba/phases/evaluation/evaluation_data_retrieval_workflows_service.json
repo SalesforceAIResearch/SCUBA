@@ -1,0 +1,195 @@
+{
+    "create_queue_with_members" : [
+        {
+          "type": "soql",
+          "id": "queue_check",
+          "params": {
+            "query": "SELECT Id, DoesSendEmailToMembers, Email FROM Group WHERE Type = 'Queue' AND DeveloperName = '{queue_name}'"
+          }
+        },
+        {
+          "type": "soql",
+          "id": "object_type_check",
+          "params": {
+            "query": "SELECT QueueId, Queue.Name, SobjectType FROM QueueSobject WHERE QueueId = '{retrieved_results['queue_check'].records[0]['Id']}'"
+          }
+        },
+        {
+          "type": "soql",
+          "id": "member_check",
+          "params": {
+            "query": "SELECT UserOrGroup.Name, UserOrGroup.Email FROM GroupMember WHERE GroupId = '{retrieved_results['queue_check'].records[0]['Id']}'"
+          }
+        },
+        {
+          "type": "soql",
+          "id": "role_related_id",
+          "params": {
+            "query": "SELECT Id, Name, Type, RelatedId FROM Group WHERE Id IN (SELECT UserOrGroupId FROM GroupMember WHERE GroupId = '{retrieved_results['queue_check'].records[0]['Id']}')"
+          }
+        },
+        {
+          "type": "soql",
+          "id": "role_check",
+          "params": {
+            "query": "SELECT Id, Name FROM UserRole"
+          }
+        }
+      ],
+      "create_case_assignment_rule" : [
+        {
+          "type": "metadata",
+          "id": "assignment_rule_metadata",
+          "params": {
+            "types_and_members": {
+              "AssignmentRules": ["Case"]
+            }
+          }
+        }
+      ],
+    "create_case_context_setup": [
+        {
+          "type": "soql",
+          "id": "case_info",
+          "params": {
+              "query": "SELECT Id, Priority, Type, Reason, Contact.Name FROM Case WHERE Subject='{subject}' AND Status='{case_status}' AND Origin='{case_origin}'"
+          }
+        }
+    ],
+    "escalate_case_change_owner": [
+      {
+        "type": "soql",
+        "id": "case_info",
+        "params": {
+            "query": "SELECT Id, Status, Priority, SLAViolation__c, PotentialLiability__c FROM Case WHERE Subject='{case_subject}'"
+        }
+      }
+    ],
+    "create_entitlement_record": [
+      {
+        "type": "soql",
+        "id": "entitlement_info",
+        "params": {
+            "query": "SELECT Id, Type, StartDate, EndDate FROM Entitlement WHERE Name='{entitlement_name}' AND Account.Name='{account_name}'"
+          }
+      }
+    ],
+    "create_milestone": [
+      {
+        "type": "soql",
+        "id": "milestone_info",
+        "params": {
+            "query": "SELECT Name, RecurrenceType, Description FROM MilestoneType"
+          }
+      }
+    ],
+    "create_entitlement_process": [
+      {
+        "type": "metadata",
+        "id": "entitlement_criteria_check",
+        "params": {
+          "types_and_members": {
+            "EntitlementProcess": ["*"]
+          }
+        }
+      }
+    ],
+    "add_skills_for_routing": [
+      {
+        "type": "soql",
+        "id": "skill_info",
+        "params": {
+            "query": "SELECT DeveloperName FROM Skill"
+          }
+      }
+    ],
+    "create_service_resource_with_skills": [
+      {
+        "type": "soql",
+        "id": "service_resource_info",
+        "params": {
+            "query": "SELECT Id, Name, IsActive FROM ServiceResource WHERE RelatedRecord.Name = '{member_name}'"
+          }
+      },
+      {
+        "type": "soql",
+        "id": "skill_info",
+        "params": {
+            "query": "SELECT Skill.DeveloperName, EffectiveStartDate, EffectiveEndDate FROM ServiceResourceSkill WHERE ServiceResource.Id = '{retrieved_results['service_resource_info'].records[0]['Id']}'"
+          }
+      }
+    ],
+    "create_knowledge_article": [
+      {
+        "type": "soql",
+        "id": "knowledge_article_info",
+        "params": {
+            "query": "SELECT Id, PublishStatus, Question__c, Answer__c FROM Knowledge__kav WHERE Title='{article_title}'"
+          }
+      }
+    ],
+    "create_survey": [
+      {
+        "type": "soql",
+        "id": "survey_id",
+        "params": {
+            "query": "SELECT Id FROM Survey WHERE Name='{survey_name}'"
+          }
+      },
+      {
+        "type": "soql",
+        "id": "survey_version_id",
+        "params": {
+            "query": "SELECT Id, SurveyId, Name FROM SurveyVersion WHERE SurveyId ='{retrieved_results['survey_id'].records[0]['Id']}'"
+          }
+      },
+      {
+        "type": "soql",
+        "id": "question_info",
+        "params": {
+            "query": "SELECT DeveloperName, Name, QuestionName, QuestionType FROM SurveyQuestion WHERE SurveyVersionId='{retrieved_results['survey_version_id'].records[0]['Id']}'"
+          }
+      }
+    ],
+    "create_incident_record": [
+      {
+        "type": "soql",
+        "id": "incident_record",
+        "params": {
+          "query": "SELECT Id FROM Incident WHERE Subject='{incident_subject}' AND Urgency='{urgency}' AND Impact='{impact}' AND Priority='{priority}'"
+        }
+      },
+      {
+        "type": "soql",
+        "id": "incident_product_relationship",
+        "params": {
+          "query": "SELECT Product2Id, Product2.Name, ImpactType FROM IncidentRelatedItem WHERE IncidentId='{retrieved_results['incident_record'].records[0]['Id']}'"
+
+        }
+      }
+    ],
+    "create_change_request_link_incident": [
+      {
+        "type": "soql",
+        "id": "change_request_info",
+        "params": {
+            "query": "SELECT Id, ChangeRequestNumber, Impact, Priority, RiskLevel FROM ChangeRequest WHERE Subject='{change_request_subject}'"
+          }
+      },
+      {
+        "type": "soql",
+        "id": "incident_id_info",
+        "params": {
+            "query": "SELECT RelatedIssueId FROM ChangeRequestRelatedIssue WHERE ChangeRequestId='{retrieved_results['change_request_info'].records[0]['Id']}' AND RelatedEntityType='Incident'"
+          }
+      },
+      {
+        "type": "soql",
+        "id": "incident_info",
+        "params": {
+            "query": "SELECT Id, Subject, Status FROM Incident WHERE Subject='{incident_subject}'"
+          }
+      }
+    ]
+}
+

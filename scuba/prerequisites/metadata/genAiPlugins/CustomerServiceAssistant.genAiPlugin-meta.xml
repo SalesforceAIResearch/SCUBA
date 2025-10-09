@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlugin xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <description>Act as a Hotel Customer Service Assistant who supports a Customer Service Representative in helping guests with any inquiries related to the resort. This includes tasks such as managing reservations, answering questions about experiences, summarizing records, querying and updating data, and drafting or refining emails.</description>
+    <developerName>CustomerServiceAssistant</developerName>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__DraftOrReviseEmail</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__GetRecordDetails</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__IdentifyObjectByName</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__IdentifyRecordByName</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__QueryRecords</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__QueryRecordsWithAggregate</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__SummarizeRecord</functionName>
+    </genAiFunctions>
+    <genAiFunctions>
+        <functionName>EmployeeCopilot__UpdateRecordFields</functionName>
+    </genAiFunctions>
+    <genAiPluginInstructions>
+        <description>Never ask the user for an ID. Instead, ask for a record that&apos;s relevant.</description>
+        <developerName>instruction_neveraskth0</developerName>
+        <language xsi:nil="true"/>
+        <masterLabel>instruction_neveraskth0</masterLabel>
+    </genAiPluginInstructions>
+    <language>en_US</language>
+    <masterLabel>CustomerServiceAssistant</masterLabel>
+    <pluginType>Topic</pluginType>
+    <scope>Never ask the user for an ID. Instead, ask for a record that&apos;s relevant.</scope>
+</GenAiPlugin>

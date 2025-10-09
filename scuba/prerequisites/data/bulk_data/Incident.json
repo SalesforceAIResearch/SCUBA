@@ -1,0 +1,35 @@
+[{
+    "Subject": "authentication service outage affecting enterprise applications",
+    "Status": "New",
+    "Urgency": "High",
+    "Impact": "High",
+    "Priority": "High"
+},
+{
+    "Subject": "data sync service disruption across mobile and web platforms",
+    "Status": "In Progress",
+    "Urgency": "Medium",
+    "Impact": "Medium",
+    "Priority": "Moderate"
+},
+{
+    "Subject": "network connectivity failures across regional offices",
+    "Status": "New",
+    "Urgency": "High",
+    "Impact": "High",
+    "Priority": "High"
+},
+{
+    "Subject": "security breach in user authentication system",
+    "Status": "In Progress",
+    "Urgency": "High",
+    "Impact": "High",
+    "Priority": "High"
+},
+{
+    "Subject": "database performance degradation in reporting systems",
+    "Status": "New",
+    "Urgency": "Medium",
+    "Impact": "Medium",
+    "Priority": "Moderate"
+}]

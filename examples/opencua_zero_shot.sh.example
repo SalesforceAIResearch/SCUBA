@@ -1,0 +1,36 @@
+DOCKER_PROVIDER_HOST=<your-docker-provider-host>
+DOCKER_PROVIDER_PORT=<the-port-where-the-docker-manager-is-running; the default is 7766>
+# factory reset the server
+curl -X POST $DOCKER_PROVIDER_HOST:$DOCKER_PROVIDER_PORT/factory_reset
+echo ""
+curl $DOCKER_PROVIDER_HOST:$DOCKER_PROVIDER_PORT/get_usage
+echo ""
+source <path-to-your-conda-env/bin/activate>
+conda activate scuba || { echo "Failed to activate Conda environment"; exit 1; }
+which python
+
+
+DATA_VERSION=release
+ORG_ALIAS=<your-org-alias>
+python main_cua.py \
+    --query_instance_file data/test_zero_shot.json \
+    --data_version $DATA_VERSION \
+    --org_alias $ORG_ALIAS \
+    --service_provider ray \
+    --total_desired_envs 1 \
+    --sleep_after_execution 5 \
+    --docker_provider_host_list $DOCKER_PROVIDER_HOST \
+    --result_dir examples/sample_outputs \
+    --run_name demo_opencua \
+    --agent_name OpenCUA-7B \
+    --served_model_name OpenCUA-7B \
+    --opencua_history_type action_history \
+    --opencua_cot_level l2 \
+    --opencua_coordinate_type qwen25 \
+    --max_steps 50 \
+    --n_eval 1 \
+    --ray_base_url http://127.0.0.1:3005 \
+    --temperature 1.0 \
+    --run_as_debug_mode \
+    --debug_task_id_list sales_001_001 \
+    --reset_orgs_before_eval

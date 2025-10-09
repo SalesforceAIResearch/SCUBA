@@ -1,0 +1,21 @@
+main_cua - INFO - Create result directory: examples/sample_outputs
+main_cua - INFO - Debug mode: only evaluate 1 tasks
+main_cua - INFO - Set n_eval to 1 --> Final total [1] tasks to evaluate
+main_cua - INFO - Evaluating with the following configs:
+main_cua - INFO - max_steps: 10, temperature: 0.0, top_p: 0.9, history_n: 1
+main_cua - INFO - Creating 1 environments in parallel...
+main_cua - INFO - Done creating 1 environments in 20.85 seconds
+main_cua - INFO - Starting evaluation...
+main_cua - INFO - Starting evaluation on data version: release
+main_cua - INFO - Bulk resetting the salesforce orgs...
+main_cua - INFO - Done bulk resetting the salesforce orgs in 17.29 seconds
+main_cua - INFO - Starting evaluation with 1 tasks, 1 envs, 1 vllm clients
+main_cua - INFO - Split the task_config_pool into 2 batches due to constraints and dependencies of different tasks
+main_cua - INFO - Starting batch 0 with 1 tasks
+main_cua - INFO - Task on env   0 finished successfully ｜ total available envs:   1 | Progress:   1/  1
+main_cua - INFO - Starting batch 1 with 0 tasks
+main_cua - INFO - All tasks completed.
+main_cua - INFO - Done evaluation in 196.94 seconds
+main_cua - INFO - Closing environments...
+main_cua - INFO - Closed 1 environments
+main_cua - INFO - Done closing environments

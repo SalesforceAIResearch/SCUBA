@@ -1,0 +1,26 @@
+[
+  {
+    "MasterLabel": "MarketingAnalyticsUser",
+    "DeveloperName": "MarketingAnalyticsUser"
+  },
+  {
+    "MasterLabel": "MyNewPermissionSetGroup",
+    "DeveloperName": "MyNewPermissionSetGroup"
+  },
+  {
+    "MasterLabel": "Sales User",
+    "DeveloperName": "Sales_User"
+  },
+  {
+    "MasterLabel": "SamplePermsetGroup",
+    "DeveloperName": "SamplePermsetGroup"
+  },
+  {
+    "MasterLabel": "LaLaLandUsers",
+    "DeveloperName": "LaLaLandUsers"
+  },
+  {
+    "MasterLabel": "Manufacturing Admin",
+    "DeveloperName": "ManufacturingAdmin"
+  }
+]

@@ -1,0 +1,407 @@
+{
+  "assign_permission_set_to_user": [
+    {
+      "type": "soql",
+      "id": "permission_set_assignments",
+      "params": {
+        "query": "SELECT PermissionSet.Label FROM PermissionSetAssignment WHERE Assignee.FirstName='{username.split()[0]}' AND Assignee.LastName='{username.split()[1]}'"
+      }
+    }
+  ],
+  "assign_permset_group_to_user":[
+    {
+      "type": "soql",
+      "id": "permission_set_group_assignments",
+      "params": {
+        "query": "SELECT PermissionSetGroup.DeveloperName, Assignee.FirstName, Assignee.LastName FROM PermissionSetAssignment WHERE PermissionSetGroup.MasterLabel='{permission_set_group}'"
+      }
+    }
+  ],
+  "create_permset_group_assign_user": [
+    {
+      "type": "soql",
+      "id": "permission_set_group_info",
+      "params": {
+        "query": "SELECT Id FROM PermissionSetGroup WHERE MasterLabel='{group_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "permission_set_group_components",
+      "params": {
+        "query": "SELECT PermissionSetGroup.Id,PermissionSetGroup.MasterLabel, PermissionSet.Label FROM PermissionSetGroupComponent WHERE PermissionSetGroup.MasterLabel='{group_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "permission_set_group_assignments",
+      "params": {
+        "query": "SELECT PermissionSetGroup.MasterLabel, Assignee.FirstName, Assignee.LastName FROM PermissionSetAssignment WHERE PermissionSetGroup.MasterLabel='{group_name}'"
+      }
+    }
+  ],
+  
+  "create_permset_group_access_set": [
+    {
+      "type": "soql",
+      "id": "permission_set_group",
+      "params": {
+        "query": "SELECT Id FROM PermissionSetGroup WHERE MasterLabel='{label_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "permission_set_group_components",
+      "params": {
+        "query": "SELECT PermissionSetGroup.Id,PermissionSetGroup.MasterLabel, PermissionSet.Label FROM PermissionSetGroupComponent WHERE PermissionSetGroup.MasterLabel='{label_name}'"
+      }
+    }
+  ],
+  
+  "custom_obj_with_tab": [
+    {
+      "type": "metadata",
+      "id": "custom_objects_and_tabs",
+      "params": {
+        "types_and_members": {
+          "CustomTab": ["{custom_obj_name}__c"],
+          "CustomObject": ["{custom_obj_name}__c"]
+        }
+      }
+    }
+  ],
+  
+  "deactivate_user": [
+    {
+      "type": "soql",
+      "id": "user_status",
+      "params": {
+        "query": "SELECT IsActive FROM User WHERE User.FirstName='{username.split()[0]}' AND User.LastName='{username.split()[1]}'"
+      }
+    }
+  ],
+  
+  "freeze_user": [
+    {
+      "type": "soql",
+      "id": "user_info",
+      "params": {
+        "query": "SELECT Id FROM User WHERE User.FirstName='{username.split()[0]}' AND User.LastName='{username.split()[1]}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "user_login_status",
+      "params": {
+        "query": "SELECT IsFrozen FROM UserLogin WHERE UserId='{retrieved_results['user_info'].records[0]['Id']}'"
+      }
+    }
+  ],
+  
+  "create_permission_set_medium": [
+    {
+      "type": "metadata",
+      "id": "permission_sets",
+      "params": {
+        "types_and_members": {
+          "PermissionSet": ["{'_'.join(label_name.split(' '))}"]
+        }
+      }
+    }
+  ],
+  
+  "create_app": [
+    {
+      "type": "metadata",
+      "id": "applications_and_profiles",
+      "params": {
+        "types_and_members": {
+          "CustomApplication": ["{app_name.replace(' ', '_')}"],
+          "Profile": ["*"]
+        }
+      }
+    }
+  ],
+  
+  "create_custom_object_with_lookup": [
+    {
+      "type": "metadata",
+      "id": "custom_objects_and_profiles",
+      "params": {
+        "types_and_members": {
+          "CustomObject": ["{object_name}__c"],
+          "Profile": ["*"]
+        }
+      }
+    }
+  ],
+  
+  "update_custom_object_description_and_help_text": [
+    {
+      "type": "metadata",
+      "id": "custom_objects",
+      "params": {
+        "types_and_members": {
+          "CustomObject": ["{object_name}__c"],
+          "CustomField": ["{object_name}__c.{field_name}__c"]
+        }
+      }
+    }
+  ],
+  
+  "create_custom_tab": [
+    {
+      "type": "metadata",
+      "id": "custom_tabs_and_profiles",
+      "params": {
+        "types_and_members": {
+          "CustomTab": ["{object_name}__c"],
+          "Profile": ["*"]
+        }
+      }
+    },
+    {
+      "type": "metadata",
+      "id": "custom_applications",
+      "params": {
+        "types_and_members": {
+          "CustomTab": ["{object_name}__c"],
+          "CustomApplication": ["*"]
+        }
+      }
+    }
+  ],
+  
+  "create_list_view": [
+    {
+      "type": "soql",
+      "id": "list_view_info",
+      "params": {
+        "query": "SELECT Id, DeveloperName, Name, SObjectType FROM ListView WHERE Name='{list_name}'"
+      }
+    },
+    {
+      "type": "metadata",
+      "id": "list_view_metadata",
+      "params": {
+        "types_and_members": {
+          "ListView": ["{object_name}.{retrieved_results['list_view_info'].records[0]['DeveloperName']}"]
+        }
+      }
+    }
+  ],
+  
+  "create_list_view_share": [
+    {
+      "type": "soql",
+      "id": "list_view_info",
+      "params": {
+        "query": "SELECT Id, DeveloperName, Name, SObjectType FROM ListView WHERE Name='{list_view_name}'"
+      }
+    },
+    {
+      "type": "metadata",
+      "id": "list_view_metadata",
+      "params": {
+        "types_and_members": {
+          "ListView": ["{object_name}.{retrieved_results['list_view_info'].records[0]['DeveloperName']}"]
+        }
+      }
+    }
+  ],
+  
+  "create_report": [
+    {
+      "type": "soql",
+      "id": "report_info",
+      "params": {
+        "query": "SELECT Id FROM Report WHERE Name='{report_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "report_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/reports/{retrieved_results['report_info'].records[0]['Id']}/describe"
+      }
+    }
+  ],
+  
+  "create_report_chain_filters": [
+    {
+      "type": "soql",
+      "id": "report_info",
+      "params": {
+        "query": "SELECT Id FROM Report WHERE Name='{report_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "report_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/reports/{retrieved_results['report_info'].records[0]['Id']}/describe"
+      }
+    }
+  ],
+  
+  "create_summary_report_with_chart": [
+    {
+      "type": "soql",
+      "id": "report_info",
+      "params": {
+        "query": "SELECT Id FROM Report WHERE Name='{report_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "report_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/reports/{retrieved_results['report_info'].records[0]['Id']}/describe"
+      }
+    }
+  ],
+  
+  "create_matrix_report": [
+    {
+      "type": "soql",
+      "id": "report_info",
+      "params": {
+        "query": "SELECT Id FROM Report WHERE Name='{report_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "report_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/reports/{retrieved_results['report_info'].records[0]['Id']}/describe"
+      }
+    }
+  ],
+  "create_matching_rule": [
+    {
+      "type": "metadata",
+      "id": "matching_rule_metadata",
+      "params": {
+        "types_and_members": {
+          "MatchingRule": ["{object_name}.{rule_name.replace(' ', '_')}"]
+        }
+      }
+    }
+  ],
+  "create_dashboard": [
+    {
+      "type": "soql",
+      "id": "report_info",
+      "params": {
+        "query": "SELECT Id FROM Report WHERE Name='{report_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "report_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/reports/{retrieved_results['report_info'].records[0]['Id']}/describe"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "dashboard_info",
+      "params": {
+        "query": "SELECT Id FROM Dashboard WHERE Title='{dashboard_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "dashboard_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/dashboards/{retrieved_results['dashboard_info'].records[0]['Id']}/describe"
+      }
+    }
+  ],
+  
+  "create_report_with_cross_filter": [
+    {
+      "type": "soql",
+      "id": "report_info",
+      "params": {
+        "query": "SELECT Id FROM Report WHERE Name='{report_name}'"
+      }
+    },
+    {
+      "type": "tooling",
+      "id": "report_metadata",
+      "params": {
+        "endpoint": "/services/data/v62.0/analytics/reports/{retrieved_results['report_info'].records[0]['Id']}/describe"
+      }
+    }
+  ],
+  
+  "create_dynamic_forms": [
+    {
+      "type": "metadata",
+      "id": "flexipage_metadata",
+      "params": {
+        "types_and_members": {
+          "FlexiPage": ["*"]
+        }
+      }
+    }
+  ],
+  
+  "create_muting_permission_set": [
+    {
+      "type": "metadata",
+      "id": "permission_set_group",
+      "params": {
+        "types_and_members": {
+          "PermissionSetGroup": ["{permission_set_group.replace(' ', '_')}"]
+        }
+      }
+    },
+    {
+      "type": "metadata",
+      "id": "muting_permission_set",
+      "params": {
+        "types_and_members": {
+          "MutingPermissionSet": ["*"]
+        }
+      }
+    }
+  ],
+  
+  "create_owd_settings": [
+    {
+      "type": "metadata",
+      "id": "custom_objects",
+      "params": {
+        "types_and_members": {
+          "CustomObject": ["{object_name}"]
+        }
+      }
+    }
+  ],
+  
+  "create_chart_for_list_view": [
+    {
+      "type": "soql",
+      "id": "list_view_chart_info",
+      "params": {
+        "query": "SELECT Id, AggregateType, AggregateField, GroupingField, ChartType FROM ListViewChart WHERE MasterLabel='{chart_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "list_view_info",
+      "params": {
+        "query": "SELECT Id FROM ListView WHERE Name='{list_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "chart_instance_info",
+      "params": {
+        "query": "SELECT Label FROM ListViewChartInstance WHERE ListViewContextId='{retrieved_results['list_view_info'].records[0]['Id']}' AND SourceEntity='{object_name}'"
+      }
+    }
+  ]
+} 

@@ -1,0 +1,61 @@
+{
+    "task_id": "sales_001_001",
+    "usage": {
+        "browser_agent_usage": {
+            "number_of_planner_called": 1,
+            "total_cost": 0.0,
+            "total_prompt_tokens": 78575,
+            "total_prompt_tokens_cached": 0,
+            "total_completion_tokens": 3187,
+            "reasoning_tokens": 0,
+            "total_tokens": 81762,
+            "warnings": [
+                "No prompt tokens found in the usage; the cost might be underestimated or the callback for the model provider is not used/implemented.",
+                "No total cost found in the usage; the cost might be underestimated or the callback for the model provider is not used/implemented.",
+                "No completion tokens found in the usage; the cost might be underestimated or the callback for the model provider is not used/implemented.",
+                "No prompt tokens cached found in the usage; the cost might be underestimated or the callback for the model provider is not used/implemented.",
+                "No total tokens found in the usage; the cost might be underestimated or the callback for the model provider is not used/implemented.",
+                "No reasoning tokens found in the usage; the cost might be underestimated or the callback for the model provider is not used/implemented."
+            ]
+        },
+        "narrative_memory_summary_usage": {}
+    },
+    "evaluation_result": {
+        "System Failiures": null,
+        "Score": 0.8,
+        "Task Complete": false,
+        "Failure Reasons": [
+            [
+                "Agent failed to Correctly add email marcus.roth@oldbalance.com to Contact"
+            ]
+        ],
+        "Rubric": [
+            {
+                "milestone": "Create Account for Old Balance",
+                "is_success": true,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Create contact for the same Account",
+                "is_success": true,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Correct add contact name Marcus Roth",
+                "is_success": true,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Correctly add email marcus.roth@oldbalance.com to Contact",
+                "is_success": false,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Correctly add phone number 888-333-222 to Contact",
+                "is_success": true,
+                "weight": 0.2
+            }
+        ]
+    },
+    "time (min)": 2.7440229137738545
+}

@@ -1,0 +1,21 @@
+{
+  "required" : [ "amount", "contactId" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "amount" : {
+      "title" : "amount",
+      "description" : "The amount of the resort credit.",
+      "lightning:type" : "lightning__numberType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "contactId" : {
+      "title" : "contactId",
+      "description" : "The Id of the Contact the credit will be issued to.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

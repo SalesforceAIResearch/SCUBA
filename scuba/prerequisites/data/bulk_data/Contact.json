@@ -1,0 +1,31 @@
+[{
+    "FirstName": "David",
+    "LastName": "Kim",
+    "Email": "david.kim@techcorp.com",
+    "Phone": "(555) 123-4567"
+},
+{
+    "FirstName": "Ronny",
+    "LastName": "Chen",
+    "Email": "ronny.chen@innovatetech.com",
+    "Phone": "(555) 456-7890"
+},
+{
+    "FirstName": "Alice",
+    "LastName": "Bob",
+    "Email": "alice.bob@company.com",
+    "Phone": "(555) 789-0123"
+},
+{
+    "FirstName": "Ethan",
+    "LastName": "Parker",
+    "Email": "ethan.parker@business.com",
+    "Phone": "(555) 234-5678"
+},
+{
+    "FirstName": "Emily",
+    "LastName": "Johnson",
+    "Email": "emily.johnson@enterprise.com",
+    "Phone": "(555) 345-6789"
+}
+]

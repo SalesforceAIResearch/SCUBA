@@ -1,0 +1,6 @@
+xmltodict
+dict2xml
+pandas
+jsondiff
+requests
+gradio

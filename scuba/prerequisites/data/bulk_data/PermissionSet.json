@@ -1,0 +1,18 @@
+[
+  {
+    "Label": "Read-Only",
+    "Name": "ReadOnly"
+  },
+  {
+    "Label": "Analytics View Access",
+    "Name": "AnalyticsViewAccess"
+  },
+  {
+    "Label": "Marketing Manager",
+    "Name": "MarketingManager"
+  },
+  {
+    "Label": "Dashboard Viewer",
+    "Name": "DashboardViewer"
+  }
+]

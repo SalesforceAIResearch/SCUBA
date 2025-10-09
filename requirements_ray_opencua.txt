@@ -1,0 +1,7 @@
+transformers==4.53.0
+torch==2.8.0
+pillow==11.3.0
+tiktoken==0.11.0
+blobfile==3.0.0
+accelerate==1.10.0
+ray[serve]==2.48.0

@@ -1,0 +1,124 @@
+{
+  "add_formula_field_with_visibility": [
+    {
+      "type": "metadata",
+      "id": "object_fields",
+      "params": {
+        "types_and_members": {
+          "Profile": ["*"],
+          "CustomField": ["{object_name}.{field_name}"]
+        }
+      }
+    }
+  ],
+  "create_validation_rule": [
+    {
+      "type": "tooling",
+      "id": "validation_rule_info",
+      "params": {
+        "endpoint": "/services/data/v62.0/tooling/query?q=Select+ErrorMessage,Metadata,EntityDefinitionId,ValidationName+From+ValidationRule+WHERE+EntityDefinitionId='{object_name}'"
+      }
+    }
+  ],
+  "picklist_administration_actions": [
+    {
+      "type": "metadata",
+      "id": "picklist_info",
+      "params": {
+        "types_and_members": {
+          "StandardValueSet": ["{object_name}{field_name}"]
+        }
+      }
+    }
+  ],
+  "create_global_value_set": [
+    {
+      "type": "metadata",
+      "id": "global_value_set_info",
+      "params": {
+        "types_and_members": {
+          "GlobalValueSet": ["{value_set_name}"]
+        }
+      }
+    }
+  ],
+  "update_password_policies": [
+    {
+      "type": "metadata",
+      "id": "password_policy_info",
+      "params": {
+        "types_and_members": {
+          "Settings": ["Security"]
+        }
+      }
+    }
+  ],
+  "create_public_group": [
+    {
+        "type": "soql",
+        "id": "users",
+        "params": {
+            "query": "SELECT Id, Name FROM User WHERE Name IN ({', '.join([\"'\"+username+\"'\" for username in users])})"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "roles",
+      "params": {
+        "query": "SELECT Id, Related.Name FROM Group WHERE Type='Role' AND Related.Name IN ({', '.join([\"'\"+rolename+\"'\" for rolename in roles])})"
+      }
+    },
+    {
+        "type": "soql",
+        "id": "add_members_to_group",
+        "params": {
+            "query": "SELECT UserOrGroupId FROM GroupMember WHERE Group.Name='{group_name}'"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "groups",
+      "params": {
+        "query": "SELECT Id FROM Group WHERE Name='{group_name}'"
+      }
+    }
+  ],
+  "define_role_hierarchy": [
+    {
+      "type": "soql",
+      "id": "roles",
+      "params": {
+        "query": "SELECT Name, ParentRole.Name FROM UserRole"
+      }
+    }
+  ],
+  "create_approval_process_jump_start": [
+    {
+      "type": "metadata",
+      "id": "approval_process",
+      "params": {
+        "types_and_members": {
+          "ApprovalProcess": ["*"]
+        }
+      }
+    }
+  ],
+  "configure_approval_process_actions": [
+    {
+      "type": "metadata",
+      "id": "approval_process",
+      "params": {
+        "types_and_members": {
+          "ApprovalProcess": ["*"]
+        }
+      }
+    },
+    {
+      "type": "metadata",
+      "id": "workflows",
+      "params": {
+        "types_and_members": {"Workflow": ["*"]}
+      }
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+{
+  "create_account_and_contact": [
+    {
+        "type": "soql",
+        "id": "get_company_account",
+        "params": {
+            "query": "SELECT Id, Name FROM Account WHERE Name = '{company_name}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "get_contact",
+        "params": {
+            "query": "SELECT Id, AccountId, Name, Email, Phone, MobilePhone, HomePhone FROM Contact WHERE AccountId = '{retrieved_results['get_company_account'].records[0]['Id']}'"
+        }
+    }
+  ],
+  "create_account_hierarchy": [
+    {
+        "type": "soql",
+        "id": "accounts_info",
+        "params": {
+            "query": "SELECT Id, Name, ParentId FROM Account"
+        }
+    }
+  ],
+  "create_lead": [
+    {
+      "type": "soql",
+      "id": "lead_info",
+      "params": {
+        "query": "SELECT Id, LeadSource, Name, Company, Rating FROM Lead WHERE Name='{lead_name}'"
+      }
+    }
+  ],
+  "create_product_family_and_products": [
+    {
+        "type": "soql",
+        "id": "product_family_check",
+        "params": {
+            "query": "SELECT Id FROM Product2 WHERE Family='{product_family_name}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "product1_check",
+        "params": {
+            "query": "SELECT Id, Description, Family FROM Product2 WHERE Name='{product_1_name}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "product2_check",
+        "params": {
+            "query": "SELECT Id, Description, Family FROM Product2 WHERE Name='{product_2_name}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "product3_check",
+        "params": {
+            "query": "SELECT Id, Description, Family FROM Product2 WHERE Name='{product_3_name}'"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "product4_check",
+      "params": {
+        "query": "SELECT Id, Description, Family FROM Product2 WHERE Name='{product_4_name}'"
+      }
+    }
+  ],
+  "create_territory_model": [
+    {
+        "type": "soql",
+        "id": "territory_model_info",
+        "params": {
+            "query": "SELECT Id FROM Territory2Model WHERE Name='{territory_model_name}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "territory_rule_info",
+        "params": {
+            "query": "SELECT Id, DeveloperName FROM ObjectTerritory2AssignmentRule WHERE MasterLabel='{rule_name}' AND Territory2ModelId='{retrieved_results['territory_model_info'].records[0]['Id']}'"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "filters",
+      "params": {
+        "query": "SELECT Field, Operation, Value FROM ObjectTerritory2AssignmentRuleItem WHERE RuleId='{retrieved_results['territory_rule_info'].records[0]['Id']}'"
+      }
+    },
+    {
+        "type": "metadata",
+        "id": "sales_territory_settings",
+        "params": {
+            "types_and_members": {
+                "Settings": ["Territory2"]
+            }
+        }
+    }
+  ],
+  "create_sales_process": [
+    {
+        "type": "metadata",
+        "id": "sales_process_metadata",
+        "params": {
+            "types_and_members": {
+                "CustomObject": ["Opportunity"]
+            },
+            "filepath": "businessProcesses/{sales_process_name}.businessProcess-meta.xml"
+        }
+    }
+  ],
+  "convert_lead":[
+    {
+        "type": "soql",
+        "id": "lead_info",
+        "params": {
+            "query": "SELECT Id, IsConverted, ConvertedAccountId, ConvertedOpportunityId FROM Lead WHERE Name='{lead_name}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "check_account",
+        "params": {
+            "query": "SELECT Id, Name FROM Account WHERE Id='{retrieved_results['lead_info'].records[0]['ConvertedAccountId']}'"
+        }
+    },
+    {
+        "type": "soql",
+        "id": "opportunity_check",
+        "params": {
+            "query": "SELECT Id, Name FROM Opportunity WHERE Id='{retrieved_results['lead_info'].records[0]['ConvertedOpportunityId']}'"
+        }
+    }
+  ],
+  "update_opportunity_stage_and_activity": [
+    {
+      "type": "soql",
+      "id": "opportunity_info",
+      "params": {
+        "query": "SELECT Id, StageName FROM Opportunity WHERE Name='{opportunity_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "task_info",
+      "params": {
+        "query": "SELECT Id, Description, Subject, TaskSubtype FROM Task WHERE WhatId='{retrieved_results['opportunity_info'].records[0]['Id']}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "event_info",
+      "params": {
+        "query": "SELECT Id, Description, Subject, EventSubtype FROM Event WHERE WhatId='{retrieved_results['opportunity_info'].records[0]['Id']}'"
+      }
+    }
+  ],
+  "create_price_books": [
+    {
+        "type": "soql",
+        "id": "pricebook_info",
+        "params": {
+            "query": "SELECT Name FROM Pricebook2 WHERE Name IN ('{price_book_name1}', '{price_book_name2}')"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "pricebook_entry",
+      "params": {
+        "query": "SELECT Product2.Name, Pricebook2.Name, UnitPrice FROM PricebookEntry WHERE Pricebook2.Name IN ('{price_book_name1}', '{price_book_name2}')"
+      }
+    }
+  ],
+  "create_quote": [
+    {
+        "type": "soql",
+        "id": "quote_info",
+        "params": {
+            "query": "SELECT Id, ExpirationDate, Opportunity.Name FROM Quote WHERE Name='{quote_name}'"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "quote_line_item",
+      "params": {
+        "query": "SELECT Discount, Product2.Name, Quantity FROM QuoteLineItem WHERE Quote.Name='{quote_name}'"
+      }
+    }
+  ],
+  "create_contract_and_order": [
+    {
+      "type": "soql",
+      "id": "contract_creation",
+      "params": {
+        "query": "SELECT Id, StartDate, ContractTerm  FROM Contract WHERE Account.Name='{account_name}'"
+      }
+    },
+    {
+      "type": "soql",
+      "id": "order_creation",
+      "params": {
+        "query": "SELECT Id, EffectiveDate FROM Order WHERE ContractId='{retrieved_results['contract_creation'].records[0]['Id']}'"
+      }
+    }
+  ],
+  "create_campaign": [
+    {
+        "type": "soql",
+        "id": "campaign_info",
+        "params": {
+            "query": "SELECT Id, Type, StartDate, BudgetedCost, ExpectedRevenue FROM Campaign WHERE Name='{campaign_name}'"
+        }
+    },
+    {
+      "type": "soql",
+      "id": "campaign_members",
+      "params": {
+        "query": "SELECT Lead.Name FROM CampaignMember WHERE Campaign.Name='{campaign_name}'"
+      }
+    }
+  ]
+} 

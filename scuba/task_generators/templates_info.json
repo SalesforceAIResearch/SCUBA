@@ -1,0 +1,210 @@
+{
+  "assign_permset_group_to_user": {
+    "template_id": "admin_022",
+    "template_string": "Assign the {permission_set_group} permission set group to user {user_name}.",
+    "prerequisites": {
+      "data": {
+        "objects": ["User", "PermissionSetGroup"]
+      }
+    },
+    "objects": ["PermissionSetAssignment"],
+    "metadata_types": []
+  },
+  "create_permset_group_assign_user": {
+    "template_id": "admin_028",
+    "template_string": "Create a new permission set group {group_name} and add permissions {comma_separated_permissions_list} to this group, assign this permission set group to user {username}.",
+    "evaluation_type": "data",
+    "prerequisites": {
+      "data": {
+        "objects": ["User", "PermissionSet"]
+      }
+    },
+    "objects": ["PermissionSetAssignment","PermissionSetGroup"],
+    "metadata_types": []
+  },
+  "freeze_user": {
+    "template_id": "admin_025",
+    "template_string": "Freeze a user with Username {username}",
+    "prerequisites": {
+      "data": {
+        "objects": ["User"]
+      }
+    },
+    "objects": ["UserLogin"],
+    "metadata_types": []
+  },
+  "deactivate_user": {
+    "template_id": "admin_026",
+    "template_string": "Deactivate a user with Username {username}",
+    "prerequisites": {
+      "data": {
+        "objects": ["User"]
+      }
+    },
+    "objects": ["User"],
+    "metadata_types": []
+  },
+  "activate_matching_rule": {
+    "template_id": "admin_013",
+    "template_string": "Activate Standard {object_name} matching rule",
+    "prerequisites": {"metadata": {"types_and_members":  {"DuplicateRule":  ["*"], "MatchingRule": ["*"]}}},
+    "objects": [],
+    "metadata_types": ["MatchingRule"]
+  },
+  "create_permission_set_medium": {
+    "template_id": "admin_019",
+    "template_string": "Create a Permission set by setting the label as {label_name}. The license is set to None. Enable {object_name} Object Permissions: {permission1}, {permission2}. Enable Read and Edit Access for all fields.",
+    "prerequisites": {},
+    "objects": ["PermissionSet"],
+    "metadata_types": ["PermissionSet"]
+  },
+  "create_matching_rule": {
+    "template_id": "admin_014",
+    "template_string": "Create a matching rule named {rule_name} on the {object_name}. Use {match_method} method for the {field_name} field and leave its Match Blank Field box unchecked.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["MatchingRule"]
+  },
+  "create_app": {
+    "template_id": "admin_011",
+    "template_string": "Create an app with name {app_name}. Choose {comma_separated_objects_list} objects from available items as the navigation items. For User Profiles, choose the {comma_separated_user_profiles} from the available profiles. Leave the rest required fields as the default.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["CustomApplication"]
+  },
+  "create_custom_object_with_lookup": {
+    "template_id": "admin_018",
+    "template_string": "Create a custom object named {object_name}. Then create a Lookup Relationship with {related_object} object. It should only be visible to {comma_separated_profile_list} profiles.",
+    "prerequisites": {"data":  {"objects":  ["Profile"]}},
+    "objects": [],
+    "metadata_types": ["CustomObject"]
+  },
+  "update_custom_object_description_and_help_text": {
+    "template_id": "admin_017",
+    "template_string": "Update the description of {object_name} object with the text {description_text}. And update the help text of the {field_name} field to {help_text}.",
+    "prerequisites": {
+      "metadata": {"types_and_members":  {"CustomField": ["MyAnimal__c.Breed__c", "Environment__c.Age__c", "MyBike__c.Brand__c", "MyVehicle__c.NumWheels__c", "MyInventory__c.StockLevel__c"], "CustomObject":  ["MyAnimal__c", "MyBike__c", "Environment__c", "MyVehicle__c", "MyInventory__c"]}}
+    },
+    "objects": ["PermissionSetAssignment","PermissionSetGroup"],
+    "metadata_types": []
+  },
+  "create_permset_group_access_set": {
+    "template_id": "admin_020",
+    "template_string": "Create a Permission Set Group with the label name {label_name}. Include the {access_set_name} access set.",
+    "prerequisites": {},
+    "objects": ["PermissionSetGroup"],
+    "metadata_types": []
+  },
+  "custom_obj_with_tab": {
+    "template_id": "admin_016",
+    "template_string": "Create a custom object with label {custom_obj_name}. Check \"Launch New Custom Tab Wizard after saving this custom object\" box to select the tab style of your choice. Use the default values for the remaining.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["CustomObject"]
+  },
+  "create_custom_tab": {
+    "template_id": "admin_012",
+    "template_string": "Create a custom tab for a custom object {object_name}. Choose the {tab_style} tab style. Make the tab visible  to only {profile_name} profile and can only be accssed through the {app_name} App.",
+    "prerequisites": {
+      "metadata": {"types_and_members":  {"CustomField": ["MyAnimal__c.Breed__c", "Environment__c.Age__c", "MyBike__c.Brand__c", "MyVehicle__c.NumWheels__c", "MyInventory__c.StockLevel__c"], "CustomObject":  ["MyAnimal__c", "MyBike__c", "Environment__c", "MyVehicle__c", "MyInventory__c"]}}
+    },
+    "objects": [],
+    "metadata_types": ["CustomTab"]
+  },
+  "create_list_view": {
+    "template_id": "admin_008",
+    "template_string": "Create a list view of records of the {object_name} object. The list is named as {list_name}. Select records whose {key1} is {operator1} {value1} and whose {key2} is {operator2} {value2}.  All Users should be able to see the list view.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["ListView"]
+  },
+  "create_list_view_chart": {
+    "template_string": "Create a {chart_type} chart for the {object_name} object, under the {list_name} list view. Aggregated on the {aggregate_field} field by {aggregate_operation}. The grouping field should be {grouping_field}.",
+    "prerequisites": {},
+    "objects": ["ListViewChart"],
+    "metadata_types": []
+  },
+  "create_list_view_share": {
+    "template_id": "admin_009",
+    "template_string" : "Create a list view of records of the {object_name} object. The list is named as {list_view_name}. Include only {field1} and {field2} field.  The list view should only be accessible to {users}.",
+    "prerequisites": {"data": {"objects": ["Group"]}},
+    "objects": [],
+    "metadata_types": ["ListView"]
+  },
+  "create_report": {
+    "template_id": "admin_001",
+    "template_string": "Create a report with {object_name} type with name {report_name}. If you don’t see any data in the preview area, click the All Time link to apply a standard filter that shows results for all time. Add a {filter_type} to select records whose {filters}. If the {field_name} field is not visible in the table, add it first.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Report"]
+  },
+  "create_report_chain_filters": {
+    "template_id": "admin_003",
+    "template_string": "Create a report with the {object_name} type with name {report_name}. Add following standard filters: [1. set {field1} field {operator1}  {value1} 2. Set {field2} field {operator2} {value2} 3. Set {field3} field {operator3} {value3} 4. set {field4} field {operator4} {value4}.] Chain the filters with the logic filter with the formula [(1 OR 2) AND 3 NOT 4]. Save it to the public report.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Report"]
+  },
+  "create_summary_report_with_chart": {
+    "template_id": "admin_004",
+    "template_string": "Create a summary report with the {object_name} type with name {report_name} on the {grouping_field} field. Then create a {chart_type} chart with chart title {chart_title} {additional_comments}",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Report"]
+  },
+  "create_matrix_report": {
+    "template_id": "admin_005",
+    "template_string": "Build a matrix report of the {object_name} type with name {report_name}. Summarize on the {field_name} column with the {operation} operation. Group row on the {row_group_field} field and group column on the {column_group_field} field. Save it to the public report.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Report"]
+  },
+  "create_dashboard": {
+    "template_id": "admin_006",
+    "template_string": "Create a dashboard with name {dashboard_name}. Add a chart widget using the {report_name} report. The chart type should be {chart_type} and set the chart title to {chart_title}. Note that if the {report_name} report does not exist, create it first by following the instructions below. Create a report with the {object_name} type with the name {report_name}. Group by {group_field} field.", 
+    "prerequisites": {"metadata":  {"types_and_members":  {
+      "Report": ["unfiled$public/Required_Active_Accounts_dV2", "unfiled$public/Required_Cases_by_Priority_7OT", "unfiled$public/Required_Leads_by_Source_hJ7", "unfiled$public/Required_Opportunities_Report_TjH3", "unfiled$public/Required_Products_dHv"]
+    }}},
+    "objects": [],
+    "metadata_types": ["Dashboard"]
+  },
+  "create_report_with_cross_filter": {
+    "template_id": "admin_002",
+    "template_string": "Create a report with the {object_name} type with name {report_name}. Add a cross filter with the {cross_object_name} object. {filters}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["Report"]
+  },
+  "create_dynamic_forms": {
+    "template_id": "admin_007",
+    "template_string": "Create a dynamic form on the {object_name} object. The field {field_name} should be visible only when {field_2}'s value {operator} {value}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["FlexiPage"]
+  },
+  "create_muting_permission_set": {
+    "template_id": "admin_021",
+    "template_string": "In the '{permission_set_group}' permission set group, mute '{object}' object Permission on '{object_permission_type1}' and '{object_permission_type2}'. Mute the '{field_permission_type1}' for the '{field}' fields.",
+    "prerequisites": {
+      "data": {
+        "objects": ["PermissionSetGroup"]
+      }
+    },
+    "objects": ["PermissionSetGroup"],
+    "metadata_types": []
+  },
+  "create_owd_settings": {
+    "template_id": "admin_023",
+    "template_string": "Configure the organization-wide defaults for the {object_name} object with visibility {internal_visibility} for internal users, visibility {external_visibility} for external users, and allow users higher in the role hierarchy.",
+    "prerequisites": {"metadata": {"types_and_members":  {"CustomObject":  ["MyAnimal__c", "MyBike__c", "Environment__c", "MyInventory__c", "MyVehicle__c"]}}},
+    "objects": [],
+    "metadata_types": ["CustomObject"]
+  },
+  "create_chart_for_list_view": {
+    "template_id": "admin_010",
+    "template_string": "Create a {chart_type} chart named {chart_name} for the {object_name} object, under the {list_name} list view. Aggregated on the {aggregate_field} field by {aggregate_type}. The grouping field should be {grouping_field}.",
+    "prerequisites": {},
+    "objects": ["ListViewChart"],
+    "metadata_types": []
+  }
+}

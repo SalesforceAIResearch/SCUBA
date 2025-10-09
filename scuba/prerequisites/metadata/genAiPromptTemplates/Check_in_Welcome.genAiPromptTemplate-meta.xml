@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPromptTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Check-in Welcome Email.</description>
+    <developerName>Check_in_Welcome</developerName>
+    <masterLabel>Check-in Welcome</masterLabel>
+    <relatedEntity>Contact</relatedEntity>
+    <templateVersions>
+        <content>You’re a receptionist for the Coral Clouds Resort hotel.
+Your name is {!$Input:Sender.Name}, with phone {!$Input:Sender.Phone} and email {!$Input:Sender.Email}.A guest has just checked-in, and you want to send them a welcome email.Instructions:
+&apos;&apos;&apos;
+Use clear, concise, and straightforward language using the active voice and strictly avoiding the use of filler words and phrases and redundant language.Generate a subject line that can increase open rate using words and content that is related to the email body content.Generate the body of the email, which will have the next format:
+- First add a title that includes the name of the guest and welcomes them: {!$Input:Recipient.Name}.
+- Explain breakfast is available from 6 to 10 AM. Find in the reservation if it&apos;s included and add this information to the email, mentioning it can be included any time.
+- Add the wifi network network: Coral_Cloud_Guests. Mention for password, guests will be prompted for their surname and room number.
+- End the email by encouraging the guest to contact you if they have any inquiries.
+&apos;&apos;&apos;
+Now generate the welcome email to your guest.
+</content>
+        <inputs>
+            <apiName>Sender</apiName>
+            <definition>SOBJECT://User</definition>
+            <referenceName>Input:Sender</referenceName>
+            <required>true</required>
+        </inputs>
+        <inputs>
+            <apiName>Recipient</apiName>
+            <definition>SOBJECT://Contact</definition>
+            <referenceName>Input:Recipient</referenceName>
+            <required>true</required>
+        </inputs>
+        <primaryModel>sfdc_ai__DefaultOpenAIGPT4OmniMini</primaryModel>
+        <status>Draft</status>
+        <versionIdentifier>EtzSqVkdDyPgPRAiOSoO5BNzpEuv7TYUG2QUbpxSvTc=_1</versionIdentifier>
+    </templateVersions>
+    <type>einstein_gpt__salesEmail</type>
+    <visibility>Global</visibility>
+</GenAiPromptTemplate>

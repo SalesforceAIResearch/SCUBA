@@ -1,0 +1,152 @@
+[
+  {
+    "Lead": {
+      "LastName": "Hussein",
+      "FirstName": "Ali",
+      "Name": "Ali Hussein",
+      "Title": "Head of Emerging Technologies",
+      "Company": "Baghdad Tech Hub",
+      "Phone": "555-452-7654",
+      "Email": "ali.hussein@baghdadhtechhub.com",
+      "Status": "Working",
+      "CurrencyIsoCode": "USD",
+      "OwnerId": "005Wt000003NErnIAG",
+      "HasOptedOutOfEmail": false,
+      "IsConverted": false,
+      "IsUnreadByOwner": true,
+      "DoNotCall": false,
+      "HasOptedOutOfFax": false,
+      "LastTransferDate": "2025-04-27",
+      "HasPrivacyHold": false,
+      "IsPriorityRecord": false,
+      "Id__c": "1358"
+    },
+    "VoiceCallTranscript__c": {
+      "OwnerId": "005Wt000003MNyjIAG",
+      "Name": "Call log with Lead: Ali Hussein",
+      "CurrencyIsoCode": "USD",
+      "EndTime__c": "2023-10-21",
+      "Body__c": "[2023-10-21T10:02:00] Ava Sullivan: Hi Ali, this is Ava Sullivan from TechSolutions. How are you today?\n[2023-10-21T10:02:10] Ali Hussein: Hi Ava, I'm doing well, thank you. How about you?\n[2023-10-21T10:02:20] Ava Sullivan: I'm great, thank you for asking! I'm glad we could connect. I was looking over the details you provided about your interest in the PulseSim Pro. Is now a good time to discuss?\n[2023-10-21T10:02:30] Ali Hussein: Yes, now works for me. I'm interested to learn more and see how it fits with what we need.\n[2023-10-21T10:02:40] Ava Sullivan: Fantastic! From what you\u2019ve mentioned, you\u2019re interested in four units of the PulseSim Pro, correct?\n[2023-10-21T10:02:50] Ali Hussein: That's right. We want to enhance our simulation capabilities, and the PulseSim Pro seems like a great fit.\n[2023-10-21T10:03:05] Ava Sullivan: Absolutely. The PulseSim Pro is one of our top products for high precision simulation. It offers advanced analytics and seamless integration with existing systems, which is great for boosting efficiency.\n[2023-10-21T10:03:15] Ali Hussein: Those features sound beneficial. We do have a tight timeline for installation, though. Could you tell me more about that?\n[2023-10-21T10:03:30] Ava Sullivan: Certainly. We understand the importance of meeting tight schedules. We usually aim to complete installations within a day and ensure everything runs smoothly. Our technical team is very efficient.\n[2023-10-21T10:03:40] Ali Hussein: That\u2019s reassuring. And as for the budget, how does it look for four units?\n[2023-10-21T10:03:55] Ava Sullivan: Considering your budget is $2,261, I think we can work something out. Each PulseSim Pro unit is priced at $500. For four units, it will come to $2,000. This is below your budget, leaving room for additional services if you wish.\n[2023-10-21T10:04:10] Ali Hussein: That fits really well. I'd like to move forward, but I'll need to consult with the finance team here since I don\u2019t have the final say.\n[2023-10-21T10:04:20] Ava Sullivan: I completely understand, Ali. Would you like me to send over a detailed proposal and pricing information so you can present it to your team?\n[2023-10-21T10:04:25] Ali Hussein: Yes, please. That would be very helpful.\n[2023-10-21T10:04:35] Ava Sullivan: Great! I'll have that to you by the end of the day. Is there anything else you would need from my side?\n[2023-10-21T10:04:40] Ali Hussein: No, that sounds good for now. Thank you, Ava.\n[2023-10-21T10:04:50] Ava Sullivan: You're welcome, Ali. If any questions come up, feel free to reach out. Have a wonderful day!\n[2023-10-21T10:04:55] Ali Hussein: Thanks, Ava. You too!"
+    }
+  },
+  {
+    "Lead": {
+      "LastName": "Patel",
+      "FirstName": "Raj",
+      "Name": "Raj Patel",
+      "Title": "VP of Operations",
+      "Company": "GreenEnergy Solutions",
+      "Phone": "333-555-5678",
+      "Email": "raj.patel@greenenergysolutions.com",
+      "Status": "Working",
+      "CurrencyIsoCode": "USD",
+      "OwnerId": "005Wt000003NEtPIAW",
+      "HasOptedOutOfEmail": false,
+      "IsConverted": false,
+      "IsUnreadByOwner": true,
+      "DoNotCall": false,
+      "HasOptedOutOfFax": false,
+      "LastTransferDate": "2025-04-27",
+      "HasPrivacyHold": false,
+      "IsPriorityRecord": false,
+      "Id__c": "220"
+    },
+    "VoiceCallTranscript__c": {
+      "OwnerId": "005Wt000003MNyjIAG",
+      "Name": "Call log with Lead: Raj Patel",
+      "CurrencyIsoCode": "USD",
+      "EndTime__c": "2023-10-05",
+      "Body__c": "[2023-10-05T10:00:00] Jasper van Dijk: Hi, Raj! This is Jasper van Dijk from SimulateX. How are you doing today?\n[2023-10-05T10:00:05] Raj Patel: Hi Jasper, nice to chat with you. I'm doing well, thank you! How about yourself?\n[2023-10-05T10:00:10] Jasper van Dijk: I'm doing great, thanks for asking! I\u2019m looking forward to discussing how we can support your needs. Do you have a moment to talk about SimulateX Edge?\n[2023-10-05T10:00:18] Raj Patel: Yes, absolutely. I'm especially interested in learning more about how SimulateX Edge could fit into our current setup.\n[2023-10-05T10:00:25] Jasper van Dijk: Great! Just to ensure we're on the same page, you've expressed interest in one unit of SimulateX Edge. Is that correct?\n[2023-10-05T10:00:33] Raj Patel: Yes, that's right. We're looking to enhance our computational capabilities quite rapidly, so prompt installation is key for us.\n[2023-10-05T10:00:45] Jasper van Dijk: I understand. With SimulateX Edge, you\u2019ll get a powerful processing system that's designed to integrate smoothly into existing workflows. We ensure installations can be completed within a day, which aligns perfectly with your timeline.\n[2023-10-05T10:01:00] Raj Patel: That sounds ideal. But I do have to mention\u2014our budget is very tight right now. We're hoping to stay closer to $400 if possible. Is there any flexibility?\n[2023-10-05T10:01:20] Jasper van Dijk: I understand, Raj. The standard pricing for a single unit of SimulateX Edge is $483, which includes a year-round support service. Unfortunately, there's limited room for discounting on standalone units, but I\u2019d be happy to explore bundling options or phased payments.\n[2023-10-05T10:01:40] Raj Patel: I see... $483 is a bit higher than we anticipated. I\u2019ll need to go back and see if we can adjust internally, but I can\u2019t commit until I confirm with our finance team.\n[2023-10-05T10:02:00] Jasper van Dijk: Totally understandable. A quick question about logistics\u2014should I still prepare a proposal in case the budget clears?\n[2023-10-05T10:02:15] Raj Patel: Yes, please do. I\u2019d like to review all the details with the team. If we can make it work, we\u2019ll move ahead.\n[2023-10-05T10:02:30] Jasper van Dijk: Sounds good. Just to highlight some benefits\u2014SimulateX Edge is optimized for high efficiency, with real-time data processing and increased scalability.\n[2023-10-05T10:02:45] Raj Patel: Definitely impressive. It's just the budget hurdle we need to sort out first.\n[2023-10-05T10:03:00] Jasper van Dijk: Understood. I\u2019ll get the proposal to you within the next couple of hours so you have everything you need for the discussion.\n[2023-10-05T10:03:15] Raj Patel: Thanks, Jasper. I\u2019ll get back to you as soon as I hear from the team.\n[2023-10-05T10:03:30] Jasper van Dijk: Appreciate it, Raj. I\u2019ll be standing by. Have a great day!\n[2023-10-05T10:03:35] Raj Patel: You too. Goodbye!"
+    }
+  },
+  {
+    "Lead": {
+      "LastName": "Chen",
+      "FirstName": "Wei",
+      "Name": "Wei Chen",
+      "Title": "Chief Integration Officer",
+      "Company": "PrimeEdge Technology",
+      "Phone": "333-555-9102",
+      "Email": "wei.chen@primeedgetechnology.com",
+      "Status": "Working",
+      "CurrencyIsoCode": "USD",
+      "OwnerId": "005Wt000003NIovIAG",
+      "HasOptedOutOfEmail": false,
+      "IsConverted": false,
+      "IsUnreadByOwner": true,
+      "DoNotCall": false,
+      "HasOptedOutOfFax": false,
+      "LastTransferDate": "2025-04-27",
+      "HasPrivacyHold": false,
+      "IsPriorityRecord": false,
+      "Id__c": "295"
+    },
+    "VoiceCallTranscript__c": {
+      "OwnerId": "005Wt000003MNyjIAG",
+      "Name": "Call log with Lead: Wei Chen",
+      "CurrencyIsoCode": "USD",
+      "EndTime__c": "2023-10-16",
+      "Body__c": "[2023-10-16T10:00:00] Carlos Fernandez: Hi, is this Wei Chen?\n[2023-10-16T10:00:05] Wei Chen: Yes, speaking. Who's this?\n[2023-10-16T10:00:10] Carlos Fernandez: Hi Wei, this is Carlos Fernandez from TechInnovations. How are you doing today?\n[2023-10-16T10:00:15] Wei Chen: Hi Carlos, I'm doing well, thank you. How about you?\n[2023-10-16T10:00:20] Carlos Fernandez: I\u2019m doing great, thanks for asking! I'm reaching out to discuss your interest in some of our products, particularly the DevVision IDE, AI Cirku-Tech, and the EcoPower Convert. Do you have a few minutes to chat?\n[2023-10-16T10:00:30] Wei Chen: Sure, I\u2019ve been looking into these products and I\u2019m definitely interested in learning more.\n[2023-10-16T10:00:35] Carlos Fernandez: Great to hear! Just to clarify, it looks like you're considering 1 DevVision IDE, 4 AI Cirku-Tech, and 3 EcoPower Convert units, right?\n[2023-10-16T10:00:40] Wei Chen: That's correct.\n[2023-10-16T10:00:50] Carlos Fernandez: Perfect. Let\u2019s start with the DevVision IDE. It\u2019s our state-of-the-art integrated development environment that really enhances productivity with features like real-time collaboration and AI-assisted coding. Do you have any specific needs when it comes to development tools?\n[2023-10-16T10:01:00] Wei Chen: Yes, we need something that can streamline our coding process and facilitate team collaboration effectively.\n[2023-10-16T10:01:10] Carlos Fernandez: DevVision is indeed perfect for that. It includes tools for version control, team chat, and code review integrations\u2014all built-in, making collaboration a breeze. Now, moving on to the AI Cirku-Tech, which you've shown a significant interest in. It's exemplary for automating processes with its deep learning capabilities.\n[2023-10-16T10:01:20] Wei Chen: Right, automation is a big focus for us going forward.\n[2023-10-16T10:01:30] Carlos Fernandez: The AI Cirku-Tech can handle data processing, predictive analytics, and much more, ultimately saving time and improving accuracy in your workflows. Now, regarding the EcoPower Convert, its key strength lies in its highly efficient power conversion, perfect for any setups prioritizing energy efficiency.\n[2023-10-16T10:01:40] Wei Chen: Energy efficiency is definitely an attribute we're looking for. Could you give me some clarity on the installation? We\u2019re targeting a two-day completion.\n[2023-10-16T10:01:50] Carlos Fernandez: Certainly! Our installation team is highly experienced and can efficiently handle both the DevVision IDE setup and the hardware installations for AI Cirku-Tech and EcoPower Convert within your timeline. We'd work with you to ensure minimal disruption to your operations.\n[2023-10-16T10:02:00] Wei Chen: Sounds promising. And in terms of costs, will these fit within our budget of $4,136?\n[2023-10-16T10:02:10] Carlos Fernandez: Good question. For the quantity you require, the pricing is competitive. Let me break it down: The DevVision IDE is priced at $1,000, each AI Cirku-Tech unit is $650, and each EcoPower Convert unit is $400. That would bring your total to $3,800. So, it fits comfortably within your specified budget.\n[2023-10-16T10:02:30] Wei Chen: That's a relief. With the pricing matching our budget, we're in a good spot. Are there any contracts or commitments we should be aware of as I have purchasing authority?\n[2023-10-16T10:02:40] Carlos Fernandez: We do offer flexible packages with options for long-term service agreements that come with benefits like extended warranties and discounted upgrades. However, it's entirely up to you if you'd like to opt-in.\n[2023-10-16T10:03:00] Wei Chen: That sounds reasonable. I might consider it after the installation is complete. For now, I think we've covered the main points.\n[2023-10-16T10:03:10] Carlos Fernandez: Absolutely, Wei. I'll send over a detailed proposal along with the next steps for installation. If you have any more questions or need further clarification, feel free to reach out at any time.\n[2023-10-16T10:03:20] Wei Chen: Thanks, Carlos. You've been very helpful. Looking forward to moving ahead.\n[2023-10-16T10:03:30] Carlos Fernandez: My pleasure, Wei! Looking forward to working together. Have a great day!\n[2023-10-16T10:03:35] Wei Chen: You too, Carlos. Goodbye."
+    }
+  },
+  {
+    "Lead": {
+      "LastName": "Chen",
+      "FirstName": "Liam",
+      "Name": "Liam Chen",
+      "Title": "Chief Technology Officer",
+      "Company": "InnovateX Solutions",
+      "Phone": "444-555-6789",
+      "Email": "liam.chen@innovatexsolutions.com",
+      "Status": "Working",
+      "CurrencyIsoCode": "USD",
+      "OwnerId": "005Wt000003NI7NIAW",
+      "HasOptedOutOfEmail": false,
+      "IsConverted": false,
+      "IsUnreadByOwner": true,
+      "DoNotCall": false,
+      "HasOptedOutOfFax": false,
+      "LastTransferDate": "2025-04-27",
+      "HasPrivacyHold": false,
+      "IsPriorityRecord": false,
+      "Id__c": "258"
+    },
+    "VoiceCallTranscript__c": {
+      "OwnerId": "005Wt000003MNyjIAG",
+      "Name": "Call log with Lead: Liam Chen",
+      "CurrencyIsoCode": "USD",
+      "EndTime__c": "2023-10-25",
+      "Body__c": "[2023-10-25T10:00:00] Lucas Moreira: Hello, is this Liam Chen?\n[2023-10-25T10:00:05] Liam Chen: Yes, this is Liam speaking.\n[2023-10-25T10:00:08] Lucas Moreira: Hi Liam, this is Lucas Moreira from SecureTech Solutions. How are you today?\n[2023-10-25T10:00:12] Liam Chen: I'm doing well, thank you. How about you?\n[2023-10-25T10:00:16] Lucas Moreira: I'm great, thank you! I wanted to follow up on your recent inquiry about our products. Is now a good time to discuss?\n[2023-10-25T10:00:20] Liam Chen: Yes, absolutely. I have some time now.\n[2023-10-25T10:00:24] Lucas Moreira: Perfect. So, I see you're interested in the CryptGuard Module, AutoLayout Master, and InnoTrain Hub. Could you tell me a bit more about what you're looking for?\n[2023-10-25T10:00:35] Liam Chen: Sure. We're looking to enhance our security infrastructure and streamline our processes. We need to ensure everything is operational by tomorrow, if possible.\n[2023-10-25T10:00:45] Lucas Moreira: I understand. Time is certainly of the essence. The CryptGuard Module should offer significant security enhancements. It provides robust encryption capabilities that could bolster your data protection measures.\n[2023-10-25T10:00:55] Liam Chen: That sounds promising. Security is definitely a priority.\n[2023-10-25T10:01:02] Lucas Moreira: Absolutely. As for the AutoLayout Master, it's designed to optimize workflow layouts, which should help with any efficiency goals you have. It can handle quite a bit of data with ease.\n[2023-10-25T10:01:08] Liam Chen: Great, we're always looking for ways to improve our efficiency.\n[2023-10-25T10:01:16] Lucas Moreira: And regarding the InnoTrain Hub, it facilitates seamless training and onboarding of new features for your team, which should help keep everyone on the same page with minimal downtime.\n[2023-10-25T10:01:24] Liam Chen: That's actually one of the reasons we looked into it. Training can be such a time drain otherwise.\n[2023-10-25T10:01:34] Lucas Moreira: Exactly. Now, in terms of budget, I see you're working with a budget of $3769. Our pricing does align with that figure, and I can also set up a bundle offer that could provide some savings.\n[2023-10-25T10:01:42] Liam Chen: A bundle offer could be very helpful. Can you send me more details on that?\n[2023-10-25T10:01:52] Lucas Moreira: Certainly, I'll send over all the specifics right after the call, including any discounts available. Now, since you have the ultimate financial authority, what would you need from us to make the decision to move forward?\n[2023-10-25T10:02:02] Liam Chen: Mostly just assurances on installation timings. We really need these systems in place by tomorrow.\n[2023-10-25T10:02:10] Lucas Moreira: I see. Unfortunately, due to current scheduling constraints, the earliest we could begin installation would be in seven business days. We completely understand the urgency, but our team is fully booked through next week.\n[2023-10-25T10:02:19] Liam Chen: That\u2019s a bit of a problem. We were really counting on having everything operational by tomorrow. I'll need to consider whether we can wait that long.\n[2023-10-25T10:02:27] Lucas Moreira: I understand, Liam. I\u2019ll still send over all the details, in case anything shifts on your end. Please let me know if flexibility becomes possible.\n[2023-10-25T10:02:33] Liam Chen: I will. Thanks for being transparent, Lucas. I\u2019ll talk to the team and get back to you.\n[2023-10-25T10:02:36] Lucas Moreira: Of course. Thanks again for your time, Liam. Take care.\n[2023-10-25T10:02:40] Liam Chen: You too. Goodbye."
+    }
+  },
+  {
+    "Lead": {
+      "LastName": "Al-Mansouri",
+      "FirstName": "Fatima",
+      "Name": "Fatima Al-Mansouri",
+      "Title": "Head of Research & Innovation",
+      "Company": "AgroSmart Innovations",
+      "Phone": "333-555-5678",
+      "Email": "fatima.al-mansouri@agrosmartinnovations.com",
+      "Status": "Working",
+      "CurrencyIsoCode": "USD",
+      "OwnerId": "005Wt000003NISMIA4",
+      "HasOptedOutOfEmail": false,
+      "IsConverted": false,
+      "IsUnreadByOwner": true,
+      "DoNotCall": false,
+      "HasOptedOutOfFax": false,
+      "LastTransferDate": "2025-04-27",
+      "HasPrivacyHold": false,
+      "IsPriorityRecord": false,
+      "Id__c": "60"
+    },
+    "VoiceCallTranscript__c": {
+      "OwnerId": "005Wt000003MNyjIAG",
+      "Name": "Call log with Lead: Fatima Al-Mansouri",
+      "CurrencyIsoCode": "USD",
+      "EndTime__c": "2023-10-01",
+      "Body__c": "[2023-10-01T10:00:00] Nadia Al-Balushi: Good morning! Is this Fatima Al-Mansouri?\n[2023-10-01T10:00:05] Fatima Al-Mansouri: Yes, this is Fatima. Who am I speaking with?\n[2023-10-01T10:00:10] Nadia Al-Balushi: Hello Fatima, this is Nadia Al-Balushi from SecureTech Solutions. How are you doing today?\n[2023-10-01T10:00:15] Fatima Al-Mansouri: Hi, Nadia. I'm doing well, thank you. And yourself?\n[2023-10-01T10:00:20] Nadia Al-Balushi: I'm great, thank you for asking. I'm reaching out because I see you're interested in our CryptGuard Module. Could you tell me a little more about what you're looking for?\n[2023-10-01T10:00:30] Fatima Al-Mansouri: Yes, I've been considering some security solutions, and the CryptGuard Module caught my eye, though I'm not sure if we truly need something like this right now.\n[2023-10-01T10:00:40] Nadia Al-Balushi: I understand. The CryptGuard Module is designed to enhance your overall data security with robust encryption features. What kind of security measures do you currently have in place?\n[2023-10-01T10:00:50] Fatima Al-Mansouri: We're using some basic firewalls and antivirus software. To be honest, we haven\u2019t had any real issues so far, so I\u2019m not convinced we need additional tools just yet.\n[2023-10-01T10:01:00] Nadia Al-Balushi: Got it. The CryptGuard could still offer value by proactively preventing threats, but I understand your hesitation. It's built to integrate with existing systems and enhance protection without disruptions.\n[2023-10-01T10:01:10] Fatima Al-Mansouri: That sounds useful, but I\u2019d need a stronger justification to present internally. Right now, it feels more like a nice-to-have than a necessity.\n[2023-10-01T10:01:20] Nadia Al-Balushi: That makes sense. Just to clarify\u2014our pricing for a single module is within your stated budget of 548, and installation can be completed in one day with minimal impact.\n[2023-10-01T10:01:30] Fatima Al-Mansouri: Okay, that's good to know. I do appreciate the quick turnaround. I also have the final say on purchases, so there's no issue there.\n[2023-10-01T10:01:40] Nadia Al-Balushi: Absolutely. Besides strong encryption, CryptGuard provides real-time data analytics and threat detection. It\u2019s often most valuable when risks are not yet visible.\n[2023-10-01T10:01:50] Fatima Al-Mansouri: That\u2019s fair. I\u2019ll need to think it over, though. We\u2019re not actively facing security threats, so I\u2019m not sure the timing is right.\n[2023-10-01T10:02:00] Nadia Al-Balushi: I understand completely. I\u2019ll send you a formal proposal with all the details in case things change. No pressure at all.\n[2023-10-01T10:02:10] Fatima Al-Mansouri: Thanks, Nadia. That would be helpful. I\u2019ll review everything and reach out if we decide to move forward.\n[2023-10-01T10:02:15] Nadia Al-Balushi: Thank you, Fatima. Wishing you a great day!\n[2023-10-01T10:02:20] Fatima Al-Mansouri: You too, Nadia. Goodbye!"
+    }
+  }
+]

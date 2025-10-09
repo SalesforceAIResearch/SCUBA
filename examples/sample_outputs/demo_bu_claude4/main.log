@@ -1,0 +1,10 @@
+INFO     [__main__] Debug mode: only evaluate 1 tasks
+INFO     [__main__] Set n_eval to 1 --> Final total [1] tasks to evaluate
+INFO     [__main__] Split the task_config_pool into 2 batches due to constraints and dependencies of different tasks
+INFO     [__main__] Bulk resetting the salesforce orgs...
+INFO     [__main__] Done bulk resetting the salesforce orgs in 15.33 seconds
+INFO     [__main__] [32mclaude-sonnet-4@20250514 is used for planner.[0m
+INFO     [__main__] [32mclaude-sonnet-4@20250514 is used for planner with vision.[0m
+INFO     [__main__] Starting batch 0 with 1 tasks
+INFO     [__main__] Starting evaluation for sales_001_001
+INFO     [__main__] Starting batch 1 with 0 tasks

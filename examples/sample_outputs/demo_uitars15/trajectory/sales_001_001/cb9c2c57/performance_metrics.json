@@ -1,0 +1,54 @@
+{
+    "usage": {
+        "prompt_tokens": 34029,
+        "completion_tokens": 767,
+        "total_tokens": 34796
+    },
+    "evaluation_result": {
+        "System Failiures": null,
+        "Score": 0.2,
+        "Task Complete": false,
+        "Failure Reasons": [
+            [
+                "Agent failed to Create contact for the same Account"
+            ],
+            [
+                "Agent failed to Correct add contact name Marcus Roth"
+            ],
+            [
+                "Agent failed to Correctly add email marcus.roth@oldbalance.com to Contact"
+            ],
+            [
+                "Agent failed to Correctly add phone number 888-333-222 to Contact"
+            ]
+        ],
+        "Rubric": [
+            {
+                "milestone": "Create Account for Old Balance",
+                "is_success": true,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Create contact for the same Account",
+                "is_success": false,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Correct add contact name Marcus Roth",
+                "is_success": false,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Correctly add email marcus.roth@oldbalance.com to Contact",
+                "is_success": false,
+                "weight": 0.2
+            },
+            {
+                "milestone": "Correctly add phone number 888-333-222 to Contact",
+                "is_success": false,
+                "weight": 0.2
+            }
+        ]
+    },
+    "time (min)": 1.1401212233739595
+}

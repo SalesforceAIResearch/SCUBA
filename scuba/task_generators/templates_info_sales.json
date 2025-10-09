@@ -1,0 +1,111 @@
+{
+  "create_account_and_contact": {
+    "template_id": "sales_001",
+    "template_string": "{Sentence that reveals the company name}. Help me to create an account for this company and the point of contact should be {contact_details}",
+    "prerequisites": {},
+    "objects": ["Contact","Account"],
+    "metadata_types": []
+  },
+  "create_account_hierarchy": {
+    "template_id": "sales_002", 
+    "template_string": "{company_hierarchy_description}. {setup_instructions}.",
+    "prerequisites": {},
+    "objects": ["Account"],
+    "metadata_types": []
+  },
+  "create_lead": {
+    "template_id": "sales_003",
+    "template_string": "{free_form_sentence_with_lead_description}",
+    "prerequisites": {},
+    "objects": ["Lead"],
+    "metadata_types": []
+  },
+  "convert_lead": {
+    "template_id": "sales_004",
+    "template_string": "Convert the lead with name {lead_name} to 'Closed - Converted'. If the lead's company matches an existing account, select that account; otherwise create a new account with the lead's company name. Create a new opportunity with name {opportunity_name}.",
+    "prerequisites": {
+      "data": {
+        "objects": ["Lead"]
+      }
+    },
+    "objects": ["Opportunity", "Account", "Lead"],
+    "metadata_types": []
+  },
+  "update_opportunity_stage_and_activity": {
+    "template_id": "sales_005",
+    "template_string": "For the opportunity {opportunity_name}, {activity_description}. Update the opportunity stage to {stage_name}.",
+    "prerequisites": {
+      "data": {
+        "objects": ["Opportunity"]
+      }
+    },
+    "objects": ["Opportunity", "Task", "Event"],
+    "metadata_types": []
+  },
+  "create_product_family_and_products": {
+    "template_id": "sales_006",
+    "template_string": "{product_family_name_description}. {product_details}. Help me to create the relevant info in the Product records.",
+    "prerequisites": {},
+    "objects": ["Product2"],
+    "metadata_types": ["StandardValueSet"]
+  },
+  "create_price_books": {
+    "template_id": "sales_007",
+    "template_string": "Create price books with the following details: {price_book_details}. Each price book should include the specified products with their respective unit prices.",
+    "prerequisites": {
+      "data": {
+        "objects": ["Product2", "PricebookEntry"]
+      }
+    },
+    "objects": ["PricebookEntry","Pricebook2"],
+    "metadata_types": []
+  },
+  "create_quote": {
+    "template_id": "sales_008",
+    "template_string": "The client shows a great interest in the product '{product_name}'. Create a quote with the name '{quote_name}' for the opportunity '{opportunity_name}' which expires {expiration_duration} from today. Let's apply {discount_percentage}% discount on the list price to make it the final Sales price. To qualify this price, the quantity needs to be {quantity}.",
+    "prerequisites": {
+      "metadata": {
+        "types_and_members": {
+          "Settings": ["Quote"]
+        }
+      },
+      "data": {
+        "objects": ["Product2", "PricebookEntry", "Opportunity"]
+      }
+    },
+    "objects": ["Opportunity"],
+    "metadata_types": []
+  },
+  "create_contract_and_order": {
+    "template_id": "sales_009",
+    "template_string": "Prepare a contract for the account {account_name}. The start date is {start_date}. The contract term is {contract_term_months} months. Then create an order based on this contract. The order start date should be {order_start_date}.",
+    "prerequisites": {
+      "data": {
+        "objects": ["Account"]
+      }
+    },
+    "objects": ["Order", "Contract"],
+    "metadata_types": []
+  },
+  "create_sales_process": {
+    "template_id": "sales_010",
+    "template_string": "Create a new Sales Process named '{sales_process_name}' which only includes the following stages: {comma_separated_stages_list}.",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": ["BusinessProcess"]
+  },
+  "create_territory_model": {
+    "template_id": "sales_011",
+    "template_string": "Create a territory model named '{territory_model_name}' with rule name '{rule_name}'. Set the selection criteria as '{selection_criteria}'. Enable sales territory if not already enabled.",
+    "prerequisites": {},
+    "objects": ["ObjectTerritory2AssignmentRuleItem", "ObjectTerritory2AssignmentRule", "Territory2Model"],
+    "metadata_types": []
+  },
+  "create_campaign": {
+    "template_id": "sales_012",
+    "template_string": "Create a new campaign with following details - Name: {campaign_name}; type: {campaign_type}; Start Date: {start_date}; Budget: {budget_amount}; Expected Revenue in Campaign: {expected_revenue}. Finally, invite the following leads to this campaign: {leads}",
+    "prerequisites": {"data":  {"objects":  ["Lead"]}},
+    "objects": ["Campaign"],
+    "metadata_types": []
+  }
+} 

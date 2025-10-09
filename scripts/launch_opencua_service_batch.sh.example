@@ -1,0 +1,31 @@
+#!/bin/bash
+source <path-to-your-conda-env/bin/activate>
+conda activate opencua
+which python
+# Launch script for OpenCUA Ray Serve service
+NUM_GPUS=<number-of-gpus-you-want-to-use>
+model_path=<path-to-your-opencua-model>
+
+set -e  # Exit on any error
+
+# Set environment variables
+if [ $NUM_GPUS -eq 8 ]; then
+    export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"  # Adjust based on your GPU setup
+elif [ $NUM_GPUS -eq 4 ]; then
+    export CUDA_VISIBLE_DEVICES="4,5,6,7"  # Adjust based on your GPU setup
+elif [ $NUM_GPUS -eq 2 ]; then
+    export CUDA_VISIBLE_DEVICES="6,7"  # Adjust based on your GPU setup
+elif [ $NUM_GPUS -eq 1 ]; then
+    export CUDA_VISIBLE_DEVICES="7"  # Adjust based on your GPU setup
+fi
+
+# Kill any existing Ray processes
+echo "🧹 Cleaning up existing Ray processes..."
+ray stop -f
+sleep 2
+
+# Launch the service
+echo "🚀 Launching Ray Serve Service..."
+ray start --head --dashboard-host=localhost --dashboard-port=8265 --num-gpus=$NUM_GPUS --include-dashboard=true
+# ray start --head --num-gpus=$NUM_GPUS
+python scripts/ray_serve_opencua_batch.py --num_replicas $NUM_GPUS --model_path $model_path --port 3005

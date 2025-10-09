@@ -1,0 +1,18 @@
+[
+  {"FirstName": "Alex", "LastName": "Green", "Company": "Acme Corp", "Email": "jane.doe@acme.com", "Status": "Open - Not Contacted"},
+  {"FirstName": "Jane", "LastName": "Smith", "Company": "Tech Giants", "Email": "john.smith@techgiants.com", "Status": "Working - Contacted"},
+  {"FirstName": "Alice", "LastName": "Johnson", "Company": "Innovate Ltd", "Email": "alice.johnson@innovate.com", "Status": "Working - Contacted"},
+  {"FirstName": "Bob", "LastName": "Brown", "Company": "RetailCo", "Email": "bob.brown@retailco.com", "Status": "Open - Not Contacted"},
+  {"FirstName": "Charlie", "LastName": "Green", "Company": "Green Solutions", "Email": "charlie.green@greensolutions.com", "Status": "Open - Not Contacted"},
+  {"FirstName": "Emily", "LastName": "White", "Company": "White Industries", "Email": "emily.white@whiteindustries.com", "Status": "Working - Contacted"},
+  {"FirstName": "David", "LastName": "Lee", "Company": "Lee Services", "Email": "david.lee@leeservices.com", "Status": "Working - Contacted"},
+  {"FirstName": "Ella", "LastName": "Black", "Company": "Black Enterprises", "Email": "ella.black@blackenterprises.com", "Status": "Open - Not Contacted"},
+  {"FirstName": "Frank", "LastName": "Knight", "Company": "Knight LLC", "Email": "frank.knight@knightllc.com", "Status": "Working - Contacted"},
+  {"FirstName": "Grace", "LastName": "King", "Company": "King Innovations", "Email": "grace.king@kinginnovations.com", "Status": "Working - Contacted"},
+  {"FirstName": "Priya", "LastName": "Sharma", "Company": "Sharma Solutions", "Email": "priya.sharma@sharmasolutions.com", "Status": "Working - Contacted"},
+  {"FirstName": "Lucas", "LastName": "Chen", "Company": "Chen Enterprises", "Email": "lucas.chen@chenenterprises.com", "Status": "Working - Contacted"},
+  {"FirstName": "Jordan", "LastName": "Hayes", "Company": "Hayes Industries", "Email": "jordan.hayes@hayesindustries.com", "Status": "Working - Contacted"},
+  {"FirstName": "Amanda", "LastName": "Klein", "Company": "Klein Enterprises", "Email": "amanda.klein@kleinenterprises.com", "Status": "Working - Contacted"},
+  {"FirstName": "Ali", "LastName": "Alaba", "Company": "Alaba Enterprises", "Email": "ali.alaba@alabaenterprises.com", "Status": "Working - Contacted"},
+  {"FirstName": "Leo", "LastName": "Messi", "Company": "Messi Enterprises", "Email": "leo.messi@messienterprises.com", "Status": "Working - Contacted"}
+]

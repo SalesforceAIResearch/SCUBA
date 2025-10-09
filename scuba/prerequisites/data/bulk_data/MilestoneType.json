@@ -1,0 +1,13 @@
+[{
+    "Name": "first response to priority customers",
+    "RecurrenceType": "none"
+},
+{
+    "Name": "Escalate case",
+    "RecurrenceType": "none"
+},
+{
+    "Name": "close case",
+    "RecurrenceType": "none"
+}
+]

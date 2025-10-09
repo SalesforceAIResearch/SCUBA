@@ -1,0 +1,15 @@
+[
+  {"Name": "Acme Corp", "Industry": "Technology", "AnnualRevenue": 5000000},
+  {"Name": "Tech Giants", "Industry": "Software", "AnnualRevenue": 10000000},
+  {"Name": "Innovate Ltd", "Industry": "Finance", "AnnualRevenue": 7500000},
+  {"Name": "RetailCo", "Industry": "Retail", "AnnualRevenue": 4500000},
+  {"Name": "Green Solutions", "Industry": "Energy", "AnnualRevenue": 6500000},
+  {"Name": "White Industries", "Industry": "Manufacturing", "AnnualRevenue": 8500000},
+  {"Name": "Lee Services", "Industry": "Consulting", "AnnualRevenue": 9500000},
+  {"Name": "Black Enterprises", "Industry": "Healthcare", "AnnualRevenue": 5500000},
+  {"Name": "Knight LLC", "Industry": "Legal", "AnnualRevenue": 7000000},
+  {"Name": "King Innovations", "Industry": "IT Services", "AnnualRevenue": 6000000},
+  {"Name": "Old Balance", "Industry": "Retail", "AnnualRevenue": 8000000},
+  {"Name": "Greentrail Logistics", "Industry": "Transportation", "AnnualRevenue": 12000000},
+  {"Name": "Next Horizon Technologies", "Industry": "Technology", "AnnualRevenue": 15000000}
+]

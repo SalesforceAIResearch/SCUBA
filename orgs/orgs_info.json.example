@@ -1,0 +1,8 @@
+{
+    "<org_alias>": {
+        "client_key": "your_client_key",
+        "client_secret": "your_client_secret",
+        "username": "your_username",
+        "instance": "your_instance_url"
+    }
+}

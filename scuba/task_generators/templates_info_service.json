@@ -1,0 +1,129 @@
+{
+  "create_queue_with_members": {
+    "template_id": "service_001",
+    "template_string": "Create a queue for case management with name {queue_name}. {email_instruction}. Include {role_users} as the member.",
+    "prerequisites": {
+      "data": {
+        "objects": {"User": ["users.json"]}
+      }
+    },
+    "objects": ["Queue", "QueueSobject"],
+    "metadata_types": []
+  },
+  "create_case_assignment_rule": {
+    "template_id": "service_002",
+    "template_string": "Help me with creating a case assignment rule named '{rule_name}' by assigning {entry_conditions} to {assignee}. {sort_order_description}.",
+    "prerequisites": {
+      "data": {
+        "objects": {"Group": ["groups.json"]}
+      }
+    },
+    "objects": ["AssignmentRule"],
+    "metadata_types": []
+  },
+  "create_case_context_setup": {
+    "template_id": "service_003",
+    "template_string": "{case_context_setup}",
+    "prerequisites": {
+      "data": {
+        "objects": {"Contact": ["contacts.json"]}
+      }
+    },
+    "objects": ["Case"],
+    "metadata_types": []
+  },
+  "escalate_case_change_owner": {
+    "template_id": "service_004",
+    "template_string": "The case {case_number} {case_context}. I need to change its status to escalated and change its owner to {user_profile}.",
+    "prerequisites": {
+      "data": {
+        "objects": {"Case": ["cases.json"], "User": ["users.json"]}
+      }
+    },
+    "objects": ["Case"],
+    "metadata_types": []
+  },
+  "create_entitlement_record": {
+    "template_id": "service_005",
+    "template_string": "According to the service level agreement (SLA), the {account_name} account has the {support_type} entitlement, which {date_description}. Create an entitlement record named {entitlement_name} for me.",
+    "prerequisites": {
+      "data": {
+        "objects": {"Account": ["accounts.json"]}
+      }
+    },
+    "objects": ["Entitlement"],
+    "metadata_types": []
+  },
+  "create_milestone": {
+    "template_id": "service_006",
+    "template_string": "To improve the customer service quality, we defined a new entitlement process with {milestone_count} milestones. {milestone_descriptions}.",
+    "prerequisites": {},
+    "objects": ["MilestoneType"],
+    "metadata_types": []
+  },
+  "create_entitlement_process": {
+    "template_id": "service_007",
+    "template_string": "Create an entitlement process with the name {process_name} for the {record_type} records. The {entry_condition}. Include {milestone_details}. {violation_action}.",
+    "prerequisites": {
+      "data": {
+        "objects": {"MilestoneType": ["milestones.json"]}
+      }
+    },
+    "objects": ["SlaProcess"],
+    "metadata_types": []
+  },
+  "add_skills_for_routing": {
+    "template_id": "service_008",
+    "template_string": "I just recruit a crew of agents for my service teams. They have the following skills {skill_list}. Add these skills so I can later use them for skill-based routing creation.",
+    "prerequisites": {},
+    "objects": ["Skill"],
+    "metadata_types": []
+  },
+  "create_service_resource_with_skills": {
+    "template_id": "service_009",
+    "template_string": "We onboard a new member {member_name}, who is a service agent and can take {skill_tasks} related tasks {start_date}. {certificate_expiry}. Create a service resource record and add service resource skills for {member_name}.",
+    "prerequisites": {
+      "data": {
+        "objects": {"User": ["users.json"], "Skill": ["skills.json"]}
+      }
+    },
+    "objects": ["ServiceResource", "ServiceResourceSkill"],
+    "metadata_types": []
+  },
+  "create_knowledge_article": {
+    "template_id": "service_010",
+    "template_string": "Create a knowledge article and publish it. The title should be '{article_title}' and the article detail should be '{article_content}'.",
+    "prerequisites": {},
+    "objects": ["Knowledge__kav"],
+    "metadata_types": []
+  },
+  "create_survey": {
+    "template_id": "service_011",
+    "template_string": "Create a survey with the name {survey_name}. {question_1_instruction}. {question_2_instruction}.",
+    "prerequisites": {},
+    "objects": ["Survey"],
+    "metadata_types": []
+  },
+  "create_incident_record": {
+    "template_id": "service_012",
+    "template_string": "{incident_context}. Create an incident record with the following details: {incident_details}.",
+    "prerequisites": {
+      "data": {
+        "objects": {"Product2": ["products.json"]}
+      }
+    },
+    "objects": ["Incident"],
+    "metadata_types": []
+  },
+  "create_change_request_link_incident": {
+    "template_id": "service_013",
+    "template_string": "After an intensive investigation, the root cause for the incident '{incident_subject}' is found. We need to create a change request with the following details. {change_request_details}. Link this change request to the incident case and update the incident status to {new_status}.",
+    "prerequisites": {
+      "data": {
+        "objects": {"Incident": ["incidents.json"]}
+      }
+    },
+    "objects": ["ChangeRequest"],
+    "metadata_types": []
+  }
+}

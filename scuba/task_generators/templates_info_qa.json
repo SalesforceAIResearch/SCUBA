@@ -1,0 +1,79 @@
+{
+  "qa_sales_001": {
+    "template_id": "sales_013",
+    "template_string": "Can the lead {lead_name} be qualified based on the latest discussions? If the answer is no, which factor—'Budget', 'Authority', 'Need', or 'Timeline'—is responsible? Return only one factor that the lead qualification fails to meet (i.e. 'Budget', 'Authority', 'Need', 'Timeline'). If the lead is qualified, return \"Qualified\".",
+    "prerequisites": {
+      "metadata": {
+        "types_and_members": {
+          "CustomObject": ["VoiceCallTranscript__c", "Knowledge__kav"],
+          "CustomTab": ["VoiceCallTranscript__c","Knowledge__kav"],
+          "Layout": ["VoiceCallTranscript__c-VoiceCallTranscript Layout"],
+          "Profile": ["Admin"],
+          "Settings": ["Knowledge"]
+        }
+      },
+      "data": {
+        "objects": ["LeadCall"]
+      }
+    },
+    "objects": ["VoiceCallTranscript__c", "Lead"],
+    "metadata_types": []
+  },
+  "qa_sales_002": {
+    "template_id": "sales_014",
+    "template_string": "Is the current stage name accurately representing the activity for the opportunity {opportunity_name}? If it isn't, what would be the appropriate stage name? Return only the correct stage label among ('Prospecting', 'Qualification', 'Needs Analysis', 'Value Proposition', 'Id. Decision Makers', 'Perception Analysis', 'Proposal/Price Quote', 'Negotiation/Review', 'Closed Won', 'Closed Lost'). If the stage name is correct, return \"Correct\".",
+    "prerequisites": {
+      "data": {
+        "objects": ["OppTask"]
+      }
+    },
+    "objects": ["Task", "Opportunity"],
+    "metadata_types": []
+  },
+  "qa_service_001": {
+    "template_id": "service_011",
+    "template_string": "{one_line_issue}. Grounded on the knowledge article, draft a short reply to explain the reason.",
+    "prerequisites": {
+      "metadata": {
+        "types_and_members": {
+          "Settings": ["Knowledge"],
+          "CustomObject": ["Knowledge__kav", "VoiceCallTranscript__c"],
+          "Layout": ["VoiceCallTranscript__c-VoiceCallTranscript Layout"],
+          "Profile": ["Admin"]
+        }
+      },
+      "data": {
+        "objects": ["Knowledge__kav"]
+      }
+    },
+    "objects": ["Knowledge__kav"],
+    "metadata_types": []
+  },
+  "qa_admin_039": {
+    "template_id": "admin_039",
+    "template_string": "{information}",
+    "prerequisites": {},
+    "objects": [],
+    "metadata_types": []
+  },
+  "qa_sales_003": {
+    "template_id": "sales_015",
+    "template_string": "I'm reviewing the call transcripts to extract useful information. Please examine the call between {caller1} and {caller2}, and {action}.",
+    "prerequisites": {
+      "metadata": {
+        "types_and_members": {
+          "CustomObject": ["VoiceCallTranscript__c", "Knowledge__kav"],
+          "CustomTab": ["VoiceCallTranscript__c"],
+          "Layout": ["VoiceCallTranscript__c-VoiceCallTranscript Layout"],
+          "Profile": ["Admin"],
+          "Settings": ["Knowledge"]
+        }
+      },
+      "data": {
+        "objects": ["VoiceCallTranscript__c"]
+      }
+    },
+    "objects": ["VoiceCallTranscript__c"],
+    "metadata_types": []
+  }
+}

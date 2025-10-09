@@ -1,0 +1,39 @@
+[{
+    "Subject": "Login Issues with Mobile Application",
+    "Description": "Customer is experiencing difficulties logging into the mobile application. Error message appears: 'Invalid credentials' even with correct username and password. Issue started after the latest app update.",
+    "Status": "New",
+    "Priority": "Medium",
+    "Origin": "Email",
+    "Type": "Mechanical"
+},
+{
+    "Subject": "Feature Request: Dark Mode Support",
+    "Description": "Customer has requested the addition of dark mode functionality to improve user experience during evening hours. This would help reduce eye strain and provide better accessibility options.",
+    "Status": "New",
+    "Priority": "Low",
+    "Origin": "Web"
+},
+{
+    "Subject": "Payment Processing Error",
+    "Description": "Customer reports that payment transactions are failing during checkout. The system shows 'Transaction declined' error even with valid payment methods. Multiple customers have reported similar issues since yesterday.",
+    "Status": "Working",
+    "Priority": "High",
+    "Origin": "Phone",
+    "Type": "Electronic"
+},
+{
+    "Subject": "Data Synchronization Issue",
+    "Description": "Customer's data is not syncing properly between desktop and mobile versions of the application. Changes made on one platform are not reflecting on the other. This has been ongoing for the past week.",
+    "Status": "New",
+    "Priority": "Medium",
+    "Origin": "Email",
+    "Type": "Structural"
+},
+{
+    "Subject": "Account Billing Discrepancy",
+    "Description": "Customer has been charged twice for the same service in their monthly billing statement. They are requesting a refund for the duplicate charge and clarification on their billing cycle.",
+    "Status": "New",
+    "Priority": "Low",
+    "Origin": "Email",
+    "Type": "Other"
+}]
