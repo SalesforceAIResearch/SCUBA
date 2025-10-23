@@ -47,17 +47,25 @@ def process_usage(usage: Dict):
         "total_tokens": usage.get("total_tokens", 0),
     }
     
-def reset_env(env: RemoteDesktopEnv, task_config: Dict, sf_usecase: bool = True, pause_after_login: int = 30):
-    observation = env.reset_remote_docker_container(task_config, sf_usecase=sf_usecase, pause_after_login=pause_after_login)
+def reset_env(env: RemoteDesktopEnv, 
+              task_config: Dict, 
+              storage_state_file_path: str,
+              sf_usecase: bool = True, 
+              pause_after_login: int = 30
+            ):
+    observation = env.reset_remote_docker_container(task_config, 
+                                                    sf_usecase=sf_usecase, 
+                                                    pause_after_login=pause_after_login,
+                                                    storage_state_file_path=storage_state_file_path)
     return env, observation
 
-def reset_env_with_timeout(env: RemoteDesktopEnv, task_config: Dict, timeout: int = 300):
+def reset_env_with_timeout(env: RemoteDesktopEnv, task_config: Dict, storage_state_file_path: str = None, timeout: int = 300):
     """
     Runs reset_env in a separate process and enforces a timeout.
     Returns (env, obs) on success, (None, None) on timeout or error.
     """
     with ProcessPool(max_workers=1) as pool:
-        future = pool.schedule(reset_env, args=[env, task_config], timeout=timeout)
+        future = pool.schedule(reset_env, args=[env, task_config, storage_state_file_path], timeout=timeout)
         try:
             env, obs = future.result(timeout=timeout)
             return env, obs, ''
@@ -617,7 +625,8 @@ def evaluate_single_task_vllm(
     this_task_logger.info(f"Evaluating task {task_id} with run_id {run_id} using vllm client on port {vllm_client_port}\nMax Steps budget: {args.max_steps}.")
     this_task_logger.info(f"Instruction: {instruction}")
     try:
-        env, obs, msg = reset_env_with_timeout(env, task_config, timeout=args.env_reset_timeout)
+        env, obs, msg = reset_env_with_timeout(env, task_config, 
+                                               storage_state_file_path=args.storage_state_file_path, timeout=args.env_reset_timeout)
         if env is None:
             this_task_logger.error(f"\nReset environment failed due to [{msg}]. Skip the task {task_id}...\n")
             this_task_logger.info(f"\nSkip the Instruction: {instruction}\n")
@@ -680,7 +689,9 @@ def evaluate_single_task_api(
     this_task_logger.info(f"Evaluating task {task_id} with run_id {run_id} using {args.service_provider}.\nMax Steps budget: {args.max_steps}.")
     this_task_logger.info(f"Instruction: {instruction}")
     try:
-        env, obs, msg = reset_env_with_timeout(env, task_config, timeout=args.env_reset_timeout)
+        env, obs, msg = reset_env_with_timeout(env, task_config, 
+                                               storage_state_file_path=args.storage_state_file_path, 
+                                               timeout=args.env_reset_timeout)
         if env is None:
             this_task_logger.error(f"\nReset environment failed due to [{msg}]. Skip the task {task_id}...\n")
             this_task_logger.info(f"\nSkip the Instruction: {instruction}\n")

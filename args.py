@@ -31,6 +31,7 @@ def get_args():
     parser.add_argument("--viewport_height", type=int, default=1080)
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--browser_full_screen", action="store_true")
+    parser.add_argument("--storage_state_file_path", type=str, required=True, help="Path to the storage state file.")
     # timeout setup
     parser.add_argument("--env_reset_timeout", type=int, default=300)
     parser.add_argument("--task_timeout", type=int, default=5400, help="each task is allowed to run for no more than this many seconds")

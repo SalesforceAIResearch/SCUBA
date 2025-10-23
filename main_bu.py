@@ -72,15 +72,7 @@ def remove_task_log_handler(task_logger, file_handler):
     """Remove a specific file handler after task completion."""
     if file_handler in task_logger.handlers:
         task_logger.removeHandler(file_handler)
-        file_handler.close()  # Close the file properly    
-    
-async def login_salesforce_cua(page, username: str, password: str):
-    await page.goto("https://login.salesforce.com")
-    await page.get_by_label("Username").click()
-    await page.get_by_label("Username").fill(username)
-    await page.get_by_label("Password").click()
-    await page.get_by_label("Password").fill(password)
-    await page.get_by_role("button", name="Log In").click()        
+        file_handler.close()  # Close the file properly          
 
 
 async def aevaluate_single_task_bu(    
@@ -89,7 +81,6 @@ async def aevaluate_single_task_bu(
     browser_agent_llm: Union[ChatOpenAI, ChatGoogleGenerativeAI, None],
     planner_llm_wo_vision: Union[ChatOpenAI, ChatGoogleGenerativeAI, None],
     planner_llm_with_vision: Union[ChatOpenAI, ChatGoogleGenerativeAI, None],
-    # retriever: Union[SimpleRetriever, None],
     retriever: Union[None],
     narrative_memory_summarizer_llm: Union[ChatOpenAI, ChatGoogleGenerativeAI, None],
     task_logger = None,

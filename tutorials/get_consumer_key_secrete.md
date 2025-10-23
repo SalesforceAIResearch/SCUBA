@@ -27,6 +27,7 @@ Please follow the instructions you received by email to access the org.
 </p>
 
 - Select `Full access (full)` for OAuth Scopes and use the arrow button to add under the `Selected OAuth Scopes` section.
+- Repated the above step to add `Manage user data via APIs (api)`.
 - In the Flow Enablement section, check "Enable Client Credentials Flow", and click `OK` on the Confirm screen.
 - Click `Create`.
 
