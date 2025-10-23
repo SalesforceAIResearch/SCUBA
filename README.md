@@ -95,15 +95,8 @@ Add your org information to `orgs/orgs_info.json` by 1) copying the `orgs/orgs_i
 **To test if the org information is added correctly, you can run `python tests/test_add_new_org.py`. It will print `Login successful for the org: {ORG_ALIAS}` if the org information is added correctly.**
 
 
-## Temporarily By-pass two-way authentication
-- Click the `Setup` gear icon in the top right corner of the page and click `Setup` under the `Setup Menu`.
-- In the `Quick Find` search bar (left side panel), type `Network Access`. And add the `ip address` of your machine to the `Trusted IP Ranges`.
-- To get your machine's ip address, you can run `curl ifconfig.me` in the terminal. (The `ip` should be the machine where you launch the browser environment / desktop environment.)
-
-![go_to_setup](./assets/figs/go_to_setup.png)
-![diable_two_way_auth](./assets/figs/disable_two_way_auth.png)
-
-The system might clear the ip address you added after some time. You can add the ip address again by following the same steps.
+## By-pass two-way authentication
+Please refer to the [tutorial](tutorials/bypass_mfa.md) to bypass the two-way authentication.
 
 
 
@@ -280,12 +273,8 @@ Computer-use trajectory viewer:
 # ❓FAQs
 
 ## Two-way authentication issue
+Please refer to the [tutorial](tutorials/bypass_mfa.md) to bypass the two-way authentication. If this does not work, pleaes raise an issue.
 
-If you still face the two-way authentication issue, after you whitelist your ip address, then you can try mannual login in to Salesforce, filling the verification code sent to your email. After the login is successful, the system will whitelist your ip address. You may need to run this more than once depending the frequency of the two-way authentication issue. We observed this issue when tetsting in different machines/servers.
-
-1. If you are testing the computer-use agents, please run `python tests/test_create_remote_desktop.py` first on the client side. Then ssh into the GCP server, port forwarding on the port where the VNC server is running (`8006` for example). The you can visit the `localhost:8006` to view the desktop environment you local browser. Then run `python scripts/manual_login_to_sf.py --mode cua` on the client side. You should see the page where you can provide the verification code sent to your email. After the login is successful, the system will whitelist your ip address.
-
-2. If you are testing the browser-use agents, please run `python scripts/manual_login_to_sf.py --mode bu` on the client side. You should see the page where you can provide the verification code sent to your email. After the login is successful, the system will whitelist your ip address.
 
 
 

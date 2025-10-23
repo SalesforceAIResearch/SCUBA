@@ -5,6 +5,7 @@ import sys
 from playwright.sync_api import sync_playwright, TimeoutError
 import dotenv
 import time
+import json
 dotenv.load_dotenv(override=True)
 
 # Add OSworld to Python path for absolute imports
@@ -183,8 +184,12 @@ class RemoteDesktopEnv(DesktopEnv):
                                                 vlc_port=self.vlc_port, 
                                                 cache_dir=self.cache_dir_base)
         
-    def reset_remote_docker_container(self, task_config: Optional[Dict[str, Any]] = None, 
-                                      seed=None, options=None, sf_usecase: bool = False, pause_after_login: int = 2) -> Dict[str, Any]:
+    def reset_remote_docker_container(self, 
+                                      task_config: Optional[Dict[str, Any]] = None, 
+                                      sf_usecase: bool = False, 
+                                      pause_after_login: int = 2,
+                                      storage_state_file_path: str = None,
+                                      seed=None, options=None, ) -> Dict[str, Any]:
         self._traj_no += 1
         self._step_no = 0
         self.action_history.clear()
@@ -192,7 +197,11 @@ class RemoteDesktopEnv(DesktopEnv):
         logger.info(f"Reverting to snapshot to {self.snapshot_name} by directly restarting the container {self.container_name}...")
         response = self.provider.revert_to_snapshot(self.container_name, self.snapshot_name)
         logger.info("Emulator started.")
-
+        self.storage_state = None
+        if storage_state_file_path:
+            logger.info(f"Loading storage state from {storage_state_file_path}...")
+            with open(storage_state_file_path, 'r') as f:
+                self.storage_state = json.load(f)
         if sf_usecase:
             self._login_to_salesforce(pause_after_login=pause_after_login)
         else:
@@ -212,8 +221,8 @@ class RemoteDesktopEnv(DesktopEnv):
     def close_and_create_new_remote_docker_container(self):
         self.close()
         self._start_remote_docker_container()
-            
-    def _login_to_salesforce(self, pause_after_login: int):
+        
+    def _open_chrome_browser(self):
         initial_actions = [
             # disable chrome password manager and the auto update feature
             {
@@ -269,6 +278,10 @@ class RemoteDesktopEnv(DesktopEnv):
         is_chrome_open = self.setup_controller.setup(config=initial_actions, use_proxy=False)
         if not is_chrome_open:
             raise Exception("Failed to open Chrome")
+        
+            
+    def _login_to_salesforce(self, pause_after_login: int):
+        self._open_chrome_browser()
         remote_debugging_url = f"http://{self.vm_ip}:{self.chromium_port}"
         with sync_playwright() as p:
             browser = None
@@ -287,8 +300,22 @@ class RemoteDesktopEnv(DesktopEnv):
                 raise Exception("Failed to connect to browser")
 
             context = browser.contexts[0]
+            if self.storage_state:
+                if 'cookies' in  self.storage_state and  self.storage_state['cookies']:
+                    try:
+                        context.add_cookies( self.storage_state['cookies'])
+                        logger.debug(f"Applied {len( self.storage_state['cookies'])} cookies from storage state")
+                    except Exception as cookie_error:
+                        logger.warning(f"Could not apply cookies: {cookie_error}")
+            
+                # Note: localStorage/sessionStorage need to be set at page level after navigation
+                if 'origins' in  self.storage_state:
+                    self._pending_storage_origins =  self.storage_state['origins']
+                    logger.debug("Storage origins data will be applied after page navigation")
+                
             page = context.new_page()
             page.goto("https://login.salesforce.com/")
+            self._apply_page_storage(page)
             page.get_by_label("Username").click()
             page.get_by_label("Username").fill(os.getenv("SALESFORCE_USERNAME"))
             page.get_by_label("Password").click()
@@ -335,4 +362,30 @@ class RemoteDesktopEnv(DesktopEnv):
             time.sleep(additional_delay)
             logger.info(f"Waiting for {additional_delay} seconds after initialization")
     
-    
+    def _apply_page_storage(self, page):
+        """Apply localStorage/sessionStorage to page after navigation"""
+        try:
+            if hasattr(self, '_pending_storage_origins') and self._pending_storage_origins:
+                for origin_data in self._pending_storage_origins:
+                    origin_url = origin_data.get('origin', '')
+                    if page.url.startswith(origin_url) or origin_url == '*':
+                        # Apply localStorage
+                        if 'localStorage' in origin_data:
+                            for item in origin_data['localStorage']:
+                                key = item['name']
+                                value = item['value']
+                                logger.debug(f"Applying localStorage: {key}, {value}")
+                                page.evaluate(f"localStorage.setItem('{key}', '{value}')")
+                        
+                        # Apply sessionStorage  
+                        if 'sessionStorage' in origin_data:
+                            for item in origin_data['sessionStorage']:
+                                key = item['name']
+                                value = item['value']
+                                page.evaluate(f"sessionStorage.setItem('{key}', '{value}')")
+                        
+                        logger.debug(f"Applied storage data for origin: {origin_url}")
+                        
+        except Exception as e:
+            # logger.warning(f"Could not apply page storage: {e}")
+            raise ValueError(f"Could not apply page storage: {e}")

@@ -17,6 +17,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, default='bu', choices=['bu', 'cua'])
+    parser.add_argument("--save_storage_state", action='store_true', help='Save the storage state to data/auth_state_cua.json or data/auth_state_bu.json')
     args = parser.parse_args()
 
 
@@ -48,39 +49,23 @@ if __name__ == "__main__":
             page.get_by_label("Password").click()
             page.get_by_label("Password").fill(os.getenv("SALESFORCE_PASSWORD"))
             page.get_by_role("button", name="Log In").click()
+            input("Check if you are blocked by the 2-way auth.\nIf so, manually input the code and login.\nAfter you input the code, you will be logged in successfully.\nThen press Enter to continue, the script will save the auth state to data/auth_state_cua.json if --save_storage_state is set.")
+            if args.save_storage_state:
+                context.storage_state(path="data/auth_state_cua.json")
+                print("Storage state saved to data/auth_state_cua.json")
     elif args.mode == 'bu':
-        # Add the project root to Python path so we can import browser_use
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        sys.path.insert(0, project_root)
-
-        from browser_use.browser.browser import BrowserConfig
-        from browser_use.browser.context import BrowserContextConfig
-        from browser_use.custom.browser_zoo import BrowserBugFix
-        from browser_use.custom.browser_context_zoo import BrowserContextBugFix
-        import asyncio
-        browser_config = BrowserConfig(headless=False)
-        browser = BrowserBugFix(browser_config)
-
-        context_config = BrowserContextConfig(
-            minimum_wait_page_load_time=0.5,
-            browser_window_size={'width': 1920, 'height': 1080}
-        )
-        context = BrowserContextBugFix(browser=browser, config=context_config)
-        
-        async def login_salesforce():
-            page = await context.get_current_page()
-            await page.goto("https://login.salesforce.com")
-            await page.get_by_label("Username").click()
-            await page.get_by_label("Username").fill(os.getenv("SALESFORCE_USERNAME"))
-            await page.get_by_label("Password").click()
-            await page.get_by_label("Password").fill(os.getenv("SALESFORCE_PASSWORD"))
-            await page.get_by_role("button", name="Log In").click()
-        
-        async def main():
-            await login_salesforce()
-            input("Press Enter to close the browser...")
-            # Properly close the context and browser
-            await context.close()
-            await browser.close()
-        
-        asyncio.run(main())
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto("https://login.salesforce.com/")
+            page.get_by_label("Username").click()
+            page.get_by_label("Username").fill(os.getenv("SALESFORCE_USERNAME"))
+            page.get_by_label("Password").click()
+            page.get_by_label("Password").fill(os.getenv("SALESFORCE_PASSWORD"))
+            page.get_by_role("button", name="Log In").click()
+            input("Check if you are blocked by the 2-way auth.\nIf so, manually input the code and login.\nAfter you input the code, you will be logged in successfully.\nThen press Enter to continue, the script will save the auth state to data/auth_state_bu.json if --save_storage_state is set.")  
+            if args.save_storage_state:
+                context.storage_state(path="data/auth_state_bu.json")
+                print("Storage state saved to data/auth_state_bu.json")
+            browser.close()

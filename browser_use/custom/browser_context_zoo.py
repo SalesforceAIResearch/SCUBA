@@ -44,6 +44,10 @@ class BrowserContextBugFix(BrowserContext):
                 self.DOM_SERVICE_CLASS = DomServiceBugFix
         else:
             self.DOM_SERVICE_CLASS = DomServiceBugFix
+        if 'storage_state_file_path' in kwargs:
+            self.storage_state_file_path = kwargs.pop('storage_state_file_path')
+        else:
+            self.storage_state_file_path = None
         super().__init__(*args, **kwargs)
         self.session: BrowserSessionBugFix | None = None
 
@@ -71,7 +75,7 @@ class BrowserContextBugFix(BrowserContext):
         logger.debug('Initializing browser context')
 
         playwright_browser = await self.browser.get_playwright_browser()
-        context = await self._create_context(playwright_browser)
+        context = await self._create_context(playwright_browser, storage_state_file_path=self.storage_state_file_path)
         self._page_event_handler = None
 
         # Get or create a page to use

@@ -20,3 +20,7 @@ examples/sample_outputs/demo_opencua/*
 
 
 gradio/.gradio/certificate.pem
+
+data/auth_state_cua.json
+data/auth_state_bu.json
+outputs/*
