@@ -307,7 +307,7 @@ class BrowserContext:
 		session = await self.get_session()
 		return await self._get_current_page(session)
 
-	async def _create_context(self, browser: PlaywrightBrowser):
+	async def _create_context(self, browser: PlaywrightBrowser, storage_state_file_path: str | None = None):
 		"""Creates a new browser context with anti-detection measures and loads cookies if available."""
 		if self.browser.config.cdp_url and len(browser.contexts) > 0:
 			context = browser.contexts[0]
@@ -316,6 +316,11 @@ class BrowserContext:
 			context = browser.contexts[0]
 		else:
 			# Original code for creating new context
+			if storage_state_file_path:
+				with open(storage_state_file_path, 'r') as f:
+					storage_state = json.load(f)
+			else:
+				storage_state = None
 			context = await browser.new_context(
 				viewport=self.config.browser_window_size,
 				no_viewport=False,
@@ -326,6 +331,7 @@ class BrowserContext:
 				record_video_dir=self.config.save_recording_path,
 				record_video_size=self.config.browser_window_size,
 				locale=self.config.locale,
+				storage_state=storage_state,
 			)
 
 		if self.config.trace_path:

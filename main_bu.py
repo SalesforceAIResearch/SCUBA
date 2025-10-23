@@ -122,7 +122,10 @@ async def aevaluate_single_task_bu(
             minimum_wait_page_load_time = 0.5,
             browser_window_size={'width': args.viewport_width, 'height': args.viewport_height},
         )
-        context = BrowserContextBugFix(browser=browser, config=context_config)
+        context = BrowserContextBugFix(browser=browser, 
+                                       config=context_config,
+                                       storage_state_file_path=args.storage_state_file_path
+                                       )
         retrieved_narrative_memory = []
         # add custom actions
         credentials = LoginInCredentials(username=os.environ.get("SALESFORCE_USERNAME",""), 
