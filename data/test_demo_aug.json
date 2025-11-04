@@ -62,7 +62,7 @@
                     "\"100,000\""
                 ]
             ],
-            "field_name": "Amount"
+            "field_name": "AMOUNT"
         },
         "difficulty": "medium",
         "query_template_name": "create_report",
