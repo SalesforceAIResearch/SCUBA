@@ -98,7 +98,7 @@
         "human_review_comment": "rejected since it is the same. Rewriten",
         "ground_truth_dict": {
             "object_name": "Accounts",
-            "report_name": "ActiveAccountsRPT",
+            "report_name": "MyAccountsRPT",
             "filter_type": "standard filter",
             "filters": [
                 [
