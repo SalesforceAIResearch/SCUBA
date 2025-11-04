@@ -4,7 +4,7 @@
   {"Name": "Product Development", "StageName": "Closed Won", "Amount": 300000, "CloseDate": "2025-02-10"},
   {"Name": "Consulting Service", "StageName": "Closed Lost", "Amount": 40000, "CloseDate": "2025-01-18"},
   {"Name": "Maintenance Contract", "StageName": "Qualification", "Amount": 50000, "CloseDate": "2025-06-30"},
-  {"Name": "Security Solutions", "StageName": "Needs Analysis", "Amount": 60000, "CloseDate": "2025-05-14"},
+  {"Name": "Security Solutions", "StageName": "Qualification", "Amount": 60000, "CloseDate": "2025-05-14"},
   {"Name": "IT Outsourcing", "StageName": "Value Proposition", "Amount": 70000, "CloseDate": "2025-07-08"},
   {"Name": "Digital Marketing", "StageName": "Perception Analysis", "Amount": 100000, "CloseDate": "2025-08-25"},
   {"Name": "Environmental Consultancy", "StageName": "Identify Decision Makers", "Amount": 85000, "CloseDate": "2025-09-12"},
