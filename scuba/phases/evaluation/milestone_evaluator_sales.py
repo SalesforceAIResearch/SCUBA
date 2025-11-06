@@ -5,6 +5,10 @@ It contains evaluation methods that work with pre-extracted data and return stru
 import types
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Union
+import gensim.downloader as api
+from numpy import dot
+from numpy.linalg import norm
+import numpy as np
 from dateutil.relativedelta import relativedelta
 from scuba.phases.base_phase import BasePhase
 
@@ -12,6 +16,7 @@ from scuba.phases.base_phase import BasePhase
 class MilestoneEvaluator(BasePhase):
     def __init__(self, org_alias):
         super().__init__(org_alias)
+        self.model = api.load("glove-wiki-gigaword-100")
 
     def evaluate_template_create_account_and_contact(self, data: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
         params = types.SimpleNamespace(**kwargs)
@@ -292,6 +297,19 @@ class MilestoneEvaluator(BasePhase):
         ]
         return milestones
 
+    def __sentence_vector(self, sentence):
+        words=[w for w in sentence.lower().split() if w in self.model]
+        return np.mean([self.model[w] for w in words],axis=0)
+
+    def __fuzzy_match(self, string1, string2):
+        if string1 is None or string2 is None:
+            return False
+        v1, v2 = self.__sentence_vector(string1), self.__sentence_vector(string2)
+        similarity = dot(v1, v2) / (norm(v1) * norm(v2))
+        if similarity > 0.8:
+            return True
+        return False
+
     def evaluate_template_update_opportunity_stage_and_activity(self, data: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
         params = types.SimpleNamespace(**kwargs)
         opportunity_records = data['opportunity_info'].records
@@ -303,13 +321,13 @@ class MilestoneEvaluator(BasePhase):
 
         if params.activity_type == 'Task' or params.activity_type == 'Email':
             activity_type_correct = activity_exists and activity_records[0]['TaskSubtype'] == params.activity_type
-            activity_description_correct = activity_exists and str(activity_records[0]['Subject']) == params.activity_description
+            activity_description_correct = activity_exists and self.__fuzzy_match(activity_records[0]['Subject'], params.activity_description)
         elif params.activity_type == 'Call':
             activity_type_correct = activity_exists and activity_records[0]['TaskSubtype'] == params.activity_type
-            activity_description_correct = activity_exists and str(activity_records[0]['Description']).lower() == params.activity_description.lower()
+            activity_description_correct = activity_exists and self.__fuzzy_match(str(activity_records[0]['Description']).lower(), params.activity_description.lower())
         elif params.activity_type == 'Event':
             activity_type_correct = event_exists and event_records[0]['EventSubtype'] == params.activity_type
-            activity_description_correct = event_exists and str(event_records[0]['Subject']) == params.activity_description
+            activity_description_correct = event_exists and self.__fuzzy_match(str(event_records[0]['Subject']), params.activity_description)
         else:
             activity_type_correct = False
             activity_description_correct = False
