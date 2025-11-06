@@ -65,6 +65,16 @@ class Resetter(BasePhase):
                 url = raw_response.get('records')[0]['attributes']['url']
                 delete(self.org_alias, url)
 
+    def __bulk_delete(self, object_name, record_ids):
+        username = get_org_info(self.org_alias)['username']
+        threads = []
+        for id in record_ids:
+            delete_command=f'sf data delete record --sobject {object_name} --record-id {id} -o {username}'
+            thread=threading.Thread(target=execute_sfdx_command,args=(delete_command,))
+            threads.append(thread)
+            thread.start()
+        for thread in tqdm(threads,desc="Deleting records"):
+            thread.join()
 
     def __reset_data(self):
         """
@@ -105,22 +115,7 @@ class Resetter(BasePhase):
                 new_ids = set(new_df['Id'].values.tolist())
             print(f'Found {len(new_ids)} new IDs in {o} object.')
             if len(new_ids) > 0:
-                new_df[new_df['Id'].isin(new_ids)][['Id']].to_csv(f'new_{o}.csv', index=False)
-                username = get_org_info(self.org_alias)['username']
-                if o in ['Queue', 'Knowledge__ka']:
-                    threads = []
-                    if o == 'Queue':
-                        sobject_type = 'Group'
-                    else:
-                        sobject_type = o
-                    for id in new_ids:
-                        bulk_delete_command = f'sf data delete record --sobject {sobject_type} --record-id {id} -o {username}'
-                        thread = threading.Thread(target=execute_sfdx_command, args=(bulk_delete_command,))
-                        threads.append(thread)
-                        thread.start()
-                    for thread in tqdm(threads, desc="Deleting records"):
-                        thread.join()
-                elif o == 'UserLogin':
+                if o == 'UserLogin':
                     threads = []
                     for id in new_ids:
                         endpoint = f'/services/data/v62.0/sobjects/UserLogin/{id}'
@@ -129,9 +124,13 @@ class Resetter(BasePhase):
                         thread.start()
                     for thread in tqdm(threads, desc="Patching records"):
                         thread.join()
+                    continue
+                if o == 'Queue':
+                    sobject_type = 'Group'
                 else:
-                    bulk_delete_command = f'sf data delete bulk --sobject {o} --file new_{o}.csv -o {username}'
-                    execute_sfdx_command(bulk_delete_command)
+                    sobject_type = o
+
+                self.__bulk_delete(sobject_type, new_ids)
 
             # Find and patch modified Ids
             if old_data is not None:
@@ -164,7 +163,7 @@ class Resetter(BasePhase):
 
         for type in self.metadata_types:
             if type in ['ListView', 'MatchingRule']:
-                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE SystemModstamp >= LAST_N_DAYS:10'
+                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE SystemModstamp >= LAST_N_DAYS:20'
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
