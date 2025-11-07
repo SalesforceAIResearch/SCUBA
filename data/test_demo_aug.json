@@ -538,7 +538,7 @@
             "operator2": "equals",
             "value2": "Closed Lost",
             "field3": "AMOUNT",
-            "operator3": "greaterThan",
+            "operator3": "greaterOrEqual",
             "value3": "\"5,000\"",
             "field4": "TYPE",
             "operator4": "equals",
