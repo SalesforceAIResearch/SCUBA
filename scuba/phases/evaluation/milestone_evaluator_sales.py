@@ -26,6 +26,7 @@ class MilestoneEvaluator(BasePhase):
 
         contact_data = data.get('get_contact')
         contact_exists = contact_data is not None and len(contact_data.records) > 0
+        contact_linked_to_account = contact_exists and contact_data.records[0]['Account.Name'] == params.company_name
         correct_email = contact_exists and contact_data.records[0]['Email'] == params.email_address if params.email_address else True
         correct_name = contact_exists and contact_data.records[0]['Name'] == params.contact_name
         correct_phone = contact_exists and (contact_data.records[0]['Phone'] == params.phone_number or contact_data.records[0]['MobilePhone'] == params.phone_number or contact_data.records[0]['HomePhone'] == params.phone_number) if params.phone_number else True
@@ -34,11 +35,16 @@ class MilestoneEvaluator(BasePhase):
             {
                 "milestone": f"Create Account for {params.company_name}",
                 "is_success": account_exists_with_correct_name,
-                "weight": 0.2
+                "weight": 0.1
             },
             {
-                "milestone": f"Create contact for the same Account",
-                "is_success": contact_exists,
+                'milestone': f"Create Contact {params.contact_name}",
+                'is_success': contact_exists,
+                'weight': 0.1
+            },
+            {
+                "milestone": f"Link contact to the created Account",
+                "is_success": contact_linked_to_account,
                 "weight": step_weight
             },
             {

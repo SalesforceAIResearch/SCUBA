@@ -11,7 +11,7 @@
         "type": "soql",
         "id": "get_contact",
         "params": {
-            "query": "SELECT Id, AccountId, Name, Email, Phone, MobilePhone, HomePhone FROM Contact WHERE AccountId = '{retrieved_results['get_company_account'].records[0]['Id']}'"
+            "query": "SELECT Id, Account.Name, Name, Email, Phone, MobilePhone, HomePhone FROM Contact WHERE Name = '{contact_name}'"
         }
     }
   ],
