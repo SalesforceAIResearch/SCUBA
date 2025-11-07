@@ -2,8 +2,9 @@
 This file handles the prerequisites phase of the CRM benchmark pipeline.
 It contains functions to check and install prerequisites required for each benchmark scenario.
 """
+import traceback
 from datetime import datetime,timedelta
-
+import logging
 import pandas as pd
 import glob
 import random
@@ -17,6 +18,8 @@ from scuba.phases.base_phase import BasePhase
 from scuba.helpers.utils import convert_type_to_folder_name, create_metadata_info_xml
 from scuba.helpers.salesforce_commands import deploy, post, patch, does_data_exist, authorize_using_access_token, create_project_if_not_exists, run_query
 
+logger = logging.getLogger(__name__)
+logger.propagate = True
 
 PREREQUISITES_FOLDER = 'scuba/prerequisites'
 object_unique_keys_map = {
@@ -66,7 +69,7 @@ class Prerequisites(BasePhase):
                 files = glob.glob(pattern_to_search, recursive=False)
                 destination_dir = os.path.join(self.modified_metadata_details_dir, folder_name_for_type)
                 if len(files) != 1 and member !='*':
-                    print(f'There should be exactly one file matching {pattern_to_search}')
+                    logger.info(f'There should be exactly one file matching {pattern_to_search}')
                 else:
                     if type != 'CustomField':
                         os.makedirs(destination_dir, exist_ok=True)
@@ -83,7 +86,10 @@ class Prerequisites(BasePhase):
         if package_changes_types_and_members:
             create_metadata_info_xml(package_changes_types_and_members, self.manifest_dir, is_destructive=False)
             create_metadata_info_xml({}, self.manifest_dir, is_destructive=True)
-            deploy(self.modified_orgs_dir, self.org_alias)
+            try:
+                deploy(self.modified_orgs_dir, self.org_alias)
+            except Exception as e:
+                logger.error(traceback.format_exc())
 
     def __get_id_for_dependency(self, object_name, field, value_name):
         soql = f"SELECT Id FROM {object_name} WHERE {field} = {value_name}"
@@ -110,10 +116,10 @@ class Prerequisites(BasePhase):
         data_exists, id = self.__check_prerequisities_in_existing_data(object_name, record)
         info = {key: record[key] for key in object_unique_keys_map.get(object_name)}
         if data_exists:
-            print(f'{object_name} {info} already exists in org {self.org_alias} with ID: {id}. Patching...')
+            logger.info(f'{object_name} {info} already exists in org {self.org_alias} with ID: {id}. Patching...')
             patch(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}/{id}', record)
         else:
-            print(f'{object_name} {info} does not exist in org {self.org_alias}. Creating...')
+            logger.info(f'{object_name} {info} does not exist in org {self.org_alias}. Creating...')
             post(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}', record)
 
     def __create_records(self, object_name, records):
@@ -159,7 +165,7 @@ class Prerequisites(BasePhase):
         self.__post_record(object_name1, to_post)
         exists, id = self.__get_id_for_dependency(object_name1, 'Name', f'\'{coupled_record[object_name1]["Name"]}\'')
         if not exists:
-            print(f'Posting {object_name1}: {coupled_record[object_name1]["Name"]} failed.')
+            logger.info(f'Posting {object_name1}: {coupled_record[object_name1]["Name"]} failed.')
             return
         to_post = coupled_record[object_name2].copy()
         if type(to_post) == dict:

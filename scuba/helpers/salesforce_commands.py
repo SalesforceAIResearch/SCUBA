@@ -4,10 +4,15 @@ import random
 import pandas as pd
 import json
 import time
+import logging
 import shutil
 from tqdm import tqdm
 import subprocess
 from scuba.helpers.utils import get_org_info
+
+logger = logging.getLogger(__name__)
+logger.propagate = True
+
 GREEN = "\033[92m"
 RED = "\033[91m"
 YELLOW = "\033[93m"
@@ -35,7 +40,7 @@ def get_access_token(org_alias: str):
         access_token = response.json()['access_token']
         return access_token
     except Exception as exc:
-        print(f'Authorization failed with exception: {exc}')
+        logger.info(f'Authorization failed with exception: {exc}')
 
 def get(org_alias: str, endpoint: str, access_token: str=None, instance: str=None):
     if access_token is None:
@@ -65,14 +70,20 @@ def post(org_alias:str, endpoint: str, data: dict, access_token: str=None, insta
 
     url = instance + endpoint
     response = requests.post(url, headers=headers, json=data)
-    print(response.json())
+    if response.status_code < 400:
+        return True, None
+    else:
+        return False, response.json()
 
 def patch(org_alias:str, endpoint: str, data: dict):
     headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + get_access_token(org_alias)}
     instance = get_org_info(org_alias)['instance']
     url = instance + endpoint
     response = requests.patch(url, headers=headers, json=data)
-    print(response.text)
+    if response.status_code<400:
+        return True, None
+    else:
+        return False, response.json()
 
 
 def authorize_using_access_token(org_alias: str):
@@ -84,7 +95,7 @@ def authorize_using_access_token(org_alias: str):
     stdout, stderr = execute_sfdx_command(login_command, env=env)
     if stderr != '':
         raise RuntimeError(f'{RED}Login failed with: {stderr}{RESET}')
-    print(f'{GREEN}Login successful for the org: {org_alias}{RESET}')
+    logger.info(f'{GREEN}Login successful for the org: {org_alias}{RESET}')
 
 
 def execute_sfdx_command(command: str, cwd: str=None, env=None):
@@ -97,7 +108,7 @@ def execute_sfdx_command(command: str, cwd: str=None, env=None):
     Returns:
         str: The output of the command.
     """
-    print(f"Executing command: {command}")
+    logger.info(f"Executing command: {command}")
     if env is None:
         env = os.environ.copy()
     env.update({
@@ -107,9 +118,9 @@ def execute_sfdx_command(command: str, cwd: str=None, env=None):
     stdout = output.stdout
     stderr = output.stderr
     # if stderr != '':
-        # print(f'{RED}Command failed with: {stderr}{RESET}')
-    # print(f'\t\tOutput: {output.stdout}')
-    # print(f'\t\tError: {output.stderr}')
+        # logger.info(f'{RED}Command failed with: {stderr}{RESET}')
+    # logger.info(f'\t\tOutput: {output.stdout}')
+    # logger.info(f'\t\tError: {output.stderr}')
     return output.stdout, output.stderr
 
 
@@ -122,11 +133,11 @@ def create_project_if_not_exists(folder_path: str, org_alias: str):
         org_alias (str): The alias of the organization to retrieve metadata from.
     """
     if not os.path.exists(folder_path):
-        print(f"Creating project for {org_alias} into {folder_path}.")
+        logger.info(f"Creating project for {org_alias} into {folder_path}.")
         project_name = os.path.basename(folder_path)
         generate_project_command = f"sf project generate --name {project_name} --output-dir {os.path.dirname(folder_path)}"
         execute_sfdx_command(generate_project_command)
-        print(f"Project generation complete for {org_alias}.")
+        logger.info(f"Project generation complete for {org_alias}.")
         os.makedirs(os.path.join(folder_path, "manifest"), exist_ok=True)
 
 def retrieve_initial_state_metadata(org_alias: str):
@@ -138,9 +149,9 @@ def retrieve_initial_state_metadata(org_alias: str):
         generate_manifest_command = f"sf project generate manifest --from-org {username} --output-dir manifest"
         execute_sfdx_command(generate_manifest_command, cwd=folder_path)
         retrieve_latest_metadata(folder_path, org_alias)
-        print(f"{GREEN}Retrieved initial state metadata for {org_alias} into {folder_path}.{RESET}")
+        logger.info(f"{GREEN}Retrieved initial state metadata for {org_alias} into {folder_path}.{RESET}")
     else:
-        print(f"{YELLOW}Initial state metadata for {org_alias} already exists in {folder_path}.{RESET}")
+        logger.info(f"{YELLOW}Initial state metadata for {org_alias} already exists in {folder_path}.{RESET}")
 
 
 def retrieve_latest_metadata(folder_path: str, org_alias: str):
@@ -151,16 +162,16 @@ def retrieve_latest_metadata(folder_path: str, org_alias: str):
         folder_path (str): The path to the folder containing the metadata.
         org_alias (str): The alias of the organization to retrieve metadata from.
     """
-    print(f"Retrieving metadata for {org_alias} into {folder_path}.")
+    logger.info(f"Retrieving metadata for {org_alias} into {folder_path}.")
     username = get_org_info(org_alias)['username']
     start_time = time.time()
     retrieve_command = f"sf project retrieve start --manifest manifest/package.xml -o {username}"
     execute_sfdx_command(retrieve_command, cwd=folder_path)
     end_time = time.time()
-    print(f"Retrieved latest metadata for {org_alias} to {folder_path} in {end_time - start_time} seconds.")
+    logger.info(f"Retrieved latest metadata for {org_alias} to {folder_path} in {end_time - start_time} seconds.")
 
 def deploy(folder_path: str, org_alias: str):
-    print(f"Deploying changes for {org_alias} from {folder_path}.")
+    logger.info(f"Deploying changes for {org_alias} from {folder_path}.")
     username = get_org_info(org_alias)['username']
     start_time = time.time()
     deploy_command = f"sf project deploy start --manifest manifest/package.xml --post-destructive-changes manifest/destructiveChanges.xml --ignore-errors -o {username}"
@@ -168,10 +179,10 @@ def deploy(folder_path: str, org_alias: str):
     if 'Component Failures' in output:
         raise DeployError(output)
     end_time = time.time()
-    print(f"Deployed changes to {org_alias} in {end_time - start_time} seconds.")
+    logger.info(f"Deployed changes to {org_alias} in {end_time - start_time} seconds.")
 
 def run_query(query: str, nickname: str, org_alias: str):
-    print(f"Running query: {query}")
+    logger.info(f"Running query: {query}")
     username = get_org_info(org_alias)['username']
     start_time = time.time()
     query_command = f"sf data query --query \"{query}\" --output-file {nickname}.csv --result-format csv -o {username}"
@@ -180,37 +191,37 @@ def run_query(query: str, nickname: str, org_alias: str):
         if errors != 'Querying Data... done\n':
             raise RuntimeError(f'Query failed with {errors}')
     end_time = time.time()
-    print(f"Query results saved in {nickname}.csv in {end_time - start_time} seconds.")
+    logger.info(f"Query results saved in {nickname}.csv in {end_time - start_time} seconds.")
 
 def run_query_json(query: str, org_alias: str):
-    print(f"Running query: {query}")
+    logger.info(f"Running query: {query}")
     username = get_org_info(org_alias)['username']
     start_time = time.time()
     query_command = f"sf data query --query \"{query}\" --json -o {username}"
     stdout, stderr = execute_sfdx_command(query_command)
     end_time = time.time()
-    print(f"Query executed in {end_time - start_time} seconds.")
+    logger.info(f"Query executed in {end_time - start_time} seconds.")
     return json.loads(stdout)
 
 
 def update_record(object: str, record_id: str, key: str, value: str, org_alias: str):
-    print(f"Updating record: {object}:{record_id}:{key}:{value}")
+    logger.info(f"Updating record: {object}:{record_id}:{key}:{value}")
     username = get_org_info(org_alias)['username']
     start_time = time.time()
     command = f"sf data update record --sobject {object} --record-id {record_id} --key {key} --values \"{key}={value}\" -o {username}"
     execute_sfdx_command(command)
     end_time = time.time()
-    print(f"Updated record in {end_time-start_time} seconds.")
+    logger.info(f"Updated record in {end_time-start_time} seconds.")
 
 def download_initial_csv(org_alias, object, destination_filename):
-    print(f"Downloading initial CSV for {object}.")
+    logger.info(f"Downloading initial CSV for {object}.")
     query = f'SELECT FIELDS(ALL) FROM {object} LIMIT 200'
     run_query(query, object, org_alias)
     if os.path.exists(f'{object}.csv'):
         shutil.move(f'{object}.csv', destination_filename)
 
 def install_initial_data(org_alias, instances):
-    print(f"Downloading initial data (if not already found) for {org_alias}.")
+    logger.info(f"Downloading initial data (if not already found) for {org_alias}.")
     all_objects = set()
     initial_data_directory = os.path.join('initial_data', org_alias)
     os.makedirs(initial_data_directory, exist_ok=True)
@@ -223,18 +234,18 @@ def install_initial_data(org_alias, instances):
         json_filepath = os.path.join(initial_data_directory, f'{object}.json')
         if not os.path.exists(json_filepath):
             endpoint = f"/services/data/v64.0/sobjects/{object}/describe/"
-            print(f"Pulling object description for {object}")
+            logger.info(f"Pulling object description for {object}")
             object_description = get(org_alias=org_alias, endpoint=endpoint)
             json.dump(object_description, open(json_filepath, 'w'))
         destination_filename = os.path.join(initial_data_directory, f'{object}.csv')
         if not os.path.exists(destination_filename):
             download_initial_csv(org_alias, object, destination_filename)
-    print(f"{GREEN}Downloading initial data complete.{RESET}")
+    logger.info(f"{GREEN}Downloading initial data complete.{RESET}")
 
 def does_data_exist(object: str, unique_keys_and_vals: dict, org_alias: str):
     query_pairs = [f"{key}='{value}'" for key, value in unique_keys_and_vals.items()]
     query_string = "AND ".join(query_pairs)
-    print(f"Checking data exists: {object}")
+    logger.info(f"Checking data exists: {object}")
     query = f"SELECT FIELDS(ALL) FROM {object} WHERE {query_string} LIMIT 5"
     nickname = f"check_{object}_exists_{random.randint(100,900)}"
     run_query(query, nickname, org_alias)
@@ -259,4 +270,4 @@ if __name__ == "__main__":
     try:
         deploy(f'orgs/modified_state/{org_alias}', org_alias)
     except DeployError as exc:
-        print(f'Traceback: {traceback.format_exc()}')
+        logger.info(f'Traceback: {traceback.format_exc()}')

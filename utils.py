@@ -5,7 +5,6 @@ from typing import List, Dict
 import os
 from pathlib import Path
 from scuba.phases.evaluation.master_evaluator import MilestoneEvaluator
-from scuba.phases.evaluation.master_evaluator import MilestoneEvaluator
 from scuba.phases.resetter import Resetter
 import traceback
 import time
@@ -13,6 +12,29 @@ import traceback
 import time
 
 logger = logging.getLogger(__name__)
+
+from contextlib import contextmanager
+
+
+@contextmanager
+def capture_logs_to_file(filename,level=logging.INFO):
+    logger=logging.getLogger()  # root logger
+    logger.setLevel(level)
+
+    # Create file handler
+    file_handler=logging.FileHandler(filename,mode='w')
+    formatter=logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+
+    # Add handler
+    logger.addHandler(file_handler)
+
+    try:
+        yield
+    finally:
+        # Remove handler after method finishes
+        logger.removeHandler(file_handler)
+        file_handler.close()
 
 class LogFormatter(logging.Formatter):
     def format(self, record):
@@ -126,7 +148,7 @@ def split_task_config_pool_into_batches(task_config_pool: List[Dict], args: argp
 
 
 def run_reset(batch, org_alias):
-    print(f'Resetting org {org_alias}')
+    logger.info(f'Resetting org {org_alias}')
     start = time.time()
     metadata_types = set()
     prerequisite_objects = []
@@ -144,7 +166,7 @@ def run_reset(batch, org_alias):
         for type, members in task_prerequisite_types_and_members.items():
             prerequisite_types_and_members.setdefault(type, [])
             prerequisite_types_and_members[type].extend(members)
-    prerequisite_objects = list(set(prerequisite_objects))
+    prerequisite_objects = list(dict.fromkeys(prerequisite_objects))
     for key, values in prerequisite_types_and_members.items():
         prerequisite_types_and_members[key] = list(set(values))
 
@@ -152,7 +174,7 @@ def run_reset(batch, org_alias):
                      "metadata": {"types_and_members": prerequisite_types_and_members}}
     resetter = Resetter(org_alias, list(metadata_types), list(objects), prerequisites)
     resetter.reset()
-    print(f'Resetting and prerequisites installation completed in {time.time() - start} seconds.')
+    logger.info(f'Resetting and prerequisites installation completed in {time.time() - start} seconds.')
 
 def run_evaluate(task_instance_dict: dict, agent_answer: str, org_alias: str):
     try:

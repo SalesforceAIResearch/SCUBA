@@ -5,6 +5,7 @@ It contains the Resetter class and methods to reset the Salesforce org to a know
 
 import os
 import json
+import logging
 import shutil
 import traceback
 import threading
@@ -19,7 +20,7 @@ from scuba.helpers.utils import create_metadata_info_xml, compare_folders, conve
 from scuba.helpers.salesforce_commands import get, retrieve_latest_metadata, deploy, run_query, \
     execute_sfdx_command, authorize_using_access_token, patch, delete, DeployError
 from scuba.phases.prerequisites import Prerequisites
-
+logger = logging.getLogger(__name__)
 
 class Resetter(BasePhase):
     def __init__(self, org_alias, metadata_types, objects, prerequisites):
@@ -90,7 +91,7 @@ class Resetter(BasePhase):
             try:
                 run_query(query, object, self.org_alias)
             except Exception as e:
-                print(f'Querying object {object} failed with error: {traceback.format_exc()}')
+                logger.info(f'Querying object {object} failed with error: {traceback.format_exc()}')
         for o in self.objects:
             initial_data_directory = os.path.join('initial_data', self.org_alias)
             old_data_file = os.path.join(initial_data_directory, f'{o}.csv')
@@ -104,7 +105,7 @@ class Resetter(BasePhase):
             try:
                 new_df = pd.read_csv(f'{o}.csv')
             except (EmptyDataError, FileNotFoundError) as e:
-                print(f'No data found for {o} object.')
+                logger.info(f'No data found for {o} object.')
                 if os.path.exists(f'{o}.csv'):
                     os.remove(f'{o}.csv')
                 continue
@@ -113,7 +114,7 @@ class Resetter(BasePhase):
                 new_ids = set(new_df['Id'].values.tolist()).difference(set(old_data['Id'].values.tolist()))
             else:
                 new_ids = set(new_df['Id'].values.tolist())
-            print(f'Found {len(new_ids)} new IDs in {o} object.')
+            logger.info(f'Found {len(new_ids)} new IDs in {o} object.')
             if len(new_ids) > 0:
                 if o == 'UserLogin':
                     threads = []
@@ -163,7 +164,7 @@ class Resetter(BasePhase):
 
         for type in self.metadata_types:
             if type in ['ListView', 'MatchingRule']:
-                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE SystemModstamp >= LAST_N_DAYS:20'
+                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE SystemModstamp >= LAST_N_DAYS:20 AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
@@ -178,7 +179,7 @@ class Resetter(BasePhase):
                     try:
                         deploy(self.modified_orgs_dir, self.org_alias)
                     except DeployError as exc:
-                        print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                        logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
             elif type == 'ValidationRule':
                 self.__reset_validation_rule()
             elif type in ['Report']:
@@ -212,7 +213,7 @@ class Resetter(BasePhase):
                         try:
                             deploy(self.modified_orgs_dir, self.org_alias)
                         except DeployError as exc:
-                            print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                            logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
                     destructive_changes_types_and_members.setdefault(type, [])
                     destructive_changes_types_and_members[type].append(member_name)
                     create_metadata_info_xml(destructive_changes_types_and_members, self.manifest_dir, is_destructive=True)
@@ -220,7 +221,7 @@ class Resetter(BasePhase):
                     try:
                         deploy(f'orgs/modified_state/{self.org_alias}', self.org_alias)
                     except DeployError as exc:
-                        print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                        logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
                     to_remove = os.path.join(self.modified_metadata_details_dir, folder_name_for_type, file)
                     if os.path.isfile(to_remove):
                         os.remove(to_remove)
@@ -240,7 +241,7 @@ class Resetter(BasePhase):
                     try:
                         deploy(f'orgs/modified_state/{self.org_alias}', self.org_alias)
                     except DeployError as exc:
-                        print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                        logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
 
 if __name__ == '__main__':
     resetter = Resetter(org_alias='YDCRMGUI', metadata_types=["ValidationRule"], objects=[], prerequisites={})
