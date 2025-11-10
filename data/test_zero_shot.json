@@ -10253,7 +10253,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "Shoe Case Support",
@@ -10300,7 +10300,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "VIP Support",
@@ -10347,7 +10347,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "Marketing Support",
@@ -10393,7 +10393,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "tech support specialists",
@@ -10440,7 +10440,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "enterprise client support",
