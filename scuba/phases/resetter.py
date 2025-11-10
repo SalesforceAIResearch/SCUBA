@@ -189,6 +189,23 @@ class Resetter(BasePhase):
                         logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
             elif type == 'ValidationRule':
                 self.__reset_validation_rule()
+            elif type in ['AssignmentRules']:
+                query = f'SELECT Id, SObjectType, Name FROM AssignmentRule  WHERE SystemModstamp >= LAST_N_DAYS:20 AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
+                run_query(query, type, self.org_alias)
+                try:
+                    df = pd.read_csv(f'{type}.csv')
+                    df['member']=df['SobjectType']+'.'+df['Name']
+                    new_members = df['member'].values.tolist()
+                    for member in new_members:
+                        destructive_changes_types_and_members = {'AssignmentRule': [member]}
+                        create_metadata_info_xml(destructive_changes_types_and_members, self.manifest_dir, is_destructive=True)
+                        create_metadata_info_xml({}, self.manifest_dir, is_destructive=False)
+                        try:
+                            deploy(self.modified_orgs_dir, self.org_alias)
+                        except DeployError as exc:
+                            logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                except (EmptyDataError, Exception) as exc:
+                    continue
             elif type in ['Report']:
                 query = f'SELECT Id FROM Report WHERE SystemModstamp >= LAST_N_DAYS:10'
                 run_query(query, type, self.org_alias)
