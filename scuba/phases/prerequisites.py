@@ -58,11 +58,12 @@ class Prerequisites(BasePhase):
         self.__install_prerequisite_data()
 
     def __install_prerequisite_metadata(self):
-        package_changes_types_and_members = {}
+
         self.types_and_members.update({
             'Settings': ['Knowledge', 'ServiceSetupAssistant', 'Quote', 'Entitlement']
         })
         for type, members in self.types_and_members.items():
+            package_changes_types_and_members={}
             folder_name_for_type = convert_type_to_folder_name(type)
             for member in members:
                 pattern_to_search = f"{PREREQUISITES_FOLDER}/metadata/{folder_name_for_type}/{member}*"
@@ -83,13 +84,13 @@ class Prerequisites(BasePhase):
                             shutil.copytree(files[0], os.path.join(str(destination_dir), os.path.basename(files[0])), dirs_exist_ok=True)
                     package_changes_types_and_members.setdefault(type, [])
                     package_changes_types_and_members[type].append(member)
-        if package_changes_types_and_members:
-            create_metadata_info_xml(package_changes_types_and_members, self.manifest_dir, is_destructive=False)
-            create_metadata_info_xml({}, self.manifest_dir, is_destructive=True)
-            try:
-                deploy(self.modified_orgs_dir, self.org_alias)
-            except Exception as e:
-                logger.error(traceback.format_exc())
+            if package_changes_types_and_members:
+                create_metadata_info_xml(package_changes_types_and_members, self.manifest_dir, is_destructive=False)
+                create_metadata_info_xml({}, self.manifest_dir, is_destructive=True)
+                try:
+                    deploy(self.modified_orgs_dir, self.org_alias)
+                except Exception as e:
+                    logger.error(traceback.format_exc())
 
     def __get_id_for_dependency(self, object_name, field, value_name):
         soql = f"SELECT Id FROM {object_name} WHERE {field} = {value_name}"
@@ -117,10 +118,14 @@ class Prerequisites(BasePhase):
         info = {key: record[key] for key in object_unique_keys_map.get(object_name)}
         if data_exists:
             logger.info(f'{object_name} {info} already exists in org {self.org_alias} with ID: {id}. Patching...')
-            patch(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}/{id}', record)
+            status, details = patch(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}/{id}', record)
+            if not status:
+                logger.error(f'Patching {object_name} {info} failed. Details: {details}')
         else:
             logger.info(f'{object_name} {info} does not exist in org {self.org_alias}. Creating...')
-            post(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}', record)
+            status, details = post(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}', record)
+            if not status:
+                logger.error(f'Prerequisite {object_name} {info} failed. Details: {details}')
 
     def __create_records(self, object_name, records):
         threads = []
@@ -135,7 +140,9 @@ class Prerequisites(BasePhase):
     def __generate_pricebook_records(self, products_filepath, pricebook_entry_filepath):
         data = json.load(open(products_filepath))
         _, pricebook_id = self.__get_id_for_dependency('Pricebook2', 'IsStandard', 'true')
-        patch(self.org_alias, f'/services/data/v62.0/sobjects/Pricebook2/{pricebook_id}', {'IsActive': True})
+        status, details = patch(self.org_alias, f'/services/data/v62.0/sobjects/Pricebook2/{pricebook_id}', {'IsActive': True})
+        if not status:
+            logger.error(f'Failed to activate standard pricebook. Details: {details}')
         pricebook_entry_records = []
         for record in data:
             product_name = record['Name']
@@ -200,8 +207,10 @@ class Prerequisites(BasePhase):
             os.remove(f'{nickname}.csv')
         for id in user_ids:
             endpoint = f'/services/data/v62.0/sobjects/User/{id}'
-            patch(self.org_alias, endpoint, {'UserPermissionsMarketingUser': True,
+            status, details = patch(self.org_alias, endpoint, {'UserPermissionsMarketingUser': True,
             'UserPermissionsKnowledgeUser': True})
+            if not status:
+                logger.error(f'Failed to add marketing and knowledge permissions to user {id}.')
 
     def __install_prerequisite_data(self):
         objects = self.data_prerequisites.get('objects', [])
