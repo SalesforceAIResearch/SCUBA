@@ -66,12 +66,17 @@ class Resetter(BasePhase):
                 url = raw_response.get('records')[0]['attributes']['url']
                 delete(self.org_alias, url)
 
+    def __execute_delete(self, command):
+        stdout, stderr = execute_sfdx_command(command)
+        if stderr:
+            logger.error(stderr)
+
     def __bulk_delete(self, object_name, record_ids):
         username = get_org_info(self.org_alias)['username']
         threads = []
         for id in record_ids:
             delete_command=f'sf data delete record --sobject {object_name} --record-id {id} -o {username}'
-            thread=threading.Thread(target=execute_sfdx_command,args=(delete_command,))
+            thread=threading.Thread(target=self.__execute_delete,args=(delete_command,))
             threads.append(thread)
             thread.start()
         for thread in tqdm(threads,desc="Deleting records"):
