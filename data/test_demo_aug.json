@@ -8386,6 +8386,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8429,6 +8431,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8472,6 +8476,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8515,6 +8521,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8558,6 +8566,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
