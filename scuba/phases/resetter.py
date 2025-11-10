@@ -150,7 +150,9 @@ class Resetter(BasePhase):
                     id = record['Id']
                     del record['Id']
                     endpoint = f'/services/data/v62.0/sobjects/{o}/{id}'
-                    patch(self.org_alias, endpoint, record)
+                    status, details = patch(self.org_alias, endpoint, record)
+                    if not status:
+                        logger.error(f'Failed to update {o} object {id}. Details: {details}')
 
             if os.path.exists(f'{o}.csv'):
                 os.remove(f'{o}.csv')
