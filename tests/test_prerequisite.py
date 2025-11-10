@@ -2,6 +2,8 @@ import argparse
 import json
 import os
 os.chdir('..')
+import logging
+logging.basicConfig(level=logging.INFO)
 from scuba.phases.prerequisites import Prerequisites
 from scuba.helpers.salesforce_commands import authorize_using_access_token
 

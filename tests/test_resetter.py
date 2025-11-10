@@ -3,6 +3,10 @@ import json
 from tqdm import tqdm
 import os
 os.chdir('..')
+from dotenv import load_dotenv
+load_dotenv()
+import logging
+logging.basicConfig(level=logging.INFO)
 from scuba.phases.resetter import Resetter
 from scuba.helpers.salesforce_commands import authorize_using_access_token
 
