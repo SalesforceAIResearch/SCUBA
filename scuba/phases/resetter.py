@@ -86,6 +86,9 @@ class Resetter(BasePhase):
         """
         Resets the data in the Salesforce org by deleting records created after the last reset.
         """
+        # Delete UserRole objects twice to remove dependencies
+        if 'UserRole' in self.objects:
+            self.objects.append('UserRole')
         for object in self.objects:
             if object == 'Queue':
                 query = f'SELECT FIELDS(ALL) FROM Group WHERE Type = \'{object}\' AND SystemModstamp >= LAST_N_DAYS:30 LIMIT 200'
