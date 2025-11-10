@@ -338,16 +338,7 @@ async def test(args: argparse.Namespace, task_config_pool: List[Dict]) -> None:
         total_batches = len(task_config_pool_batches)
         logger.info(f"Split the task_config_pool into {total_batches} batches due to constraints and dependencies of different tasks")
         
-        if args.reset_orgs_before_eval:
-            # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
-            logger.info(f"Bulk resetting the salesforce orgs...")
-            time_start = time.perf_counter()
-            file = os.path.join(args.result_dir, "reset.log")
-            with capture_logs_to_file(file):
-                run_reset(task_config_pool, args.org_alias)
 
-            time_end = time.perf_counter()
-            logger.info(f"Done bulk resetting the salesforce orgs in {time_end - time_start:.2f} seconds")
         if args.solutions == 'bu':
             # build auxilary components
             retriever = None
@@ -376,6 +367,15 @@ async def test(args: argparse.Namespace, task_config_pool: List[Dict]) -> None:
         for batch_idx, task_config_pool in enumerate(task_config_pool_batches):
             num_tasks = len(task_config_pool)
             logger.info(f"Starting batch {batch_idx} with {num_tasks} tasks")
+            # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
+            logger.info(f"Bulk resetting the salesforce orgs...")
+            time_start=time.perf_counter()
+            file=os.path.join(args.result_dir,"reset.log")
+            with capture_logs_to_file(file):
+                run_reset(task_config_pool, args.org_alias)
+
+            time_end=time.perf_counter()
+            logger.info(f"Done bulk resetting the salesforce orgs in {time_end-time_start:.2f} seconds")
             semaphore = asyncio.Semaphore(args.max_concurrent_tasks)
             job_queue = []
             for task_instance_dict in task_config_pool:
