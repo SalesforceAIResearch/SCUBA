@@ -14,6 +14,7 @@ def get_args():
     parser.add_argument("--max_tokens", type=int, default=2048)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top_p", type=float, default=0.9)
+    parser.add_argument("--top_k", type=int, default=1)
     parser.add_argument("--history_n", type=int, default=1, help="number of past images to include for inference")
     parser.add_argument("--n_eval", type=int, default=1, help="number of times the task should be evaluated")
     parser.add_argument("--reset_orgs_before_eval", action="store_true")
@@ -55,7 +56,8 @@ def get_args():
     parser.add_argument("--docker_provider_port", type=int, default=7766)
 
     # cua agent configs
-    parser.add_argument("--agent_name", type=str, help="backbone model name", choices=["UI-TARS-1.5", "OpenCUA-7B", "OpenAI-CUA", "S2.5", "Claude-CUA"])
+    parser.add_argument("--agent_name", type=str, help="backbone model name", choices=[
+        "UI-TARS", "UI-TARS-1.5", "OpenCUA-7B", "OpenAI-CUA", "S2.5", "Claude-CUA", "Owl", "MobileAgentV3"])
     parser.add_argument("--served_model_name", type=str, help="match vllm serve --served-model-name")
     parser.add_argument("--max_retry_per_request", type=int, default=3, help="number of times to retry for each request to the serving service")
     ## opencua agent configs

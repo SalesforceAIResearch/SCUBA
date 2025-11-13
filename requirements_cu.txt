@@ -72,3 +72,4 @@ pebble
 tenacity
 pytesseract
 # gui-agents==0.2.5.post3
+gensim==4.4.0

@@ -21,6 +21,7 @@ from agents.openaicua_agent import OpenAICUAAgent
 from agents.s2_5.agents.agent_s import AgentS2_5
 from agents.s2_5.agents.grounding import OSWorldACI
 from agents.anthropic.main import AnthropicAgent
+from agents.owl_agent import OwlAgent
 from envs.remote_docker_env import RemoteDesktopEnv
 
 load_dotenv(override=True)
@@ -76,6 +77,102 @@ def reset_env_with_timeout(env: RemoteDesktopEnv, task_config: Dict, storage_sta
             logger.error(f"reset_env failed: {e}")
             return None, None, str(e)    
         
+def agent_loop_uitars(
+        env: RemoteDesktopEnv,
+        instruction: str,
+        obs: Dict,
+        task_config: Dict,
+        this_task_logger: logging.Logger,
+        run_id: str,
+        args: argparse.Namespace,
+        **kwargs
+    ):
+    assert args.agent_name == 'UI-TARS', "agent_loop_uitars is only supported for UI-TARS"
+    assert args.viewport_width == 1920 and args.viewport_height == 1080, f"viewport_width and viewport_height must be 1920 and 1080 for UI-TARS for now"
+    assert 'vllm_client' in kwargs, "vllm_client is required for UI-TARS"
+    task_id = str(task_config["task_id"])
+    trajectory_save_dir = os.path.join(args.result_dir, args.run_name, 'trajectory', task_id, run_id)
+    if not os.path.exists(trajectory_save_dir):
+        os.makedirs(trajectory_save_dir, exist_ok=True)
+    done = False
+    step_idx = 0
+    performance_metrics = {
+        "usage": {},
+        "evaluation_result": {},
+        "time (min)": 0
+    }
+    usage_tracker = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }
+    vllm_client = kwargs['vllm_client']
+    runtime_conf: dict = {
+        "infer_mode": "qwen2vl_no_calluser",
+        "prompt_style": "qwen2vl_user",
+        "input_swap": False, # this is different from the OSWORLD implementation; see https://github.com/xlang-ai/OSWorld/issues/296
+        "language": "English",
+        "history_n": args.history_n,
+        "screen_height": args.viewport_height,
+        "screen_width": args.viewport_width,
+    }
+    agent = UITARSAgent(
+        model=args.served_model_name,
+        platform=args.platform,
+        top_p=args.top_p,
+        top_k=args.top_k,
+        temperature=args.temperature,        
+        action_space="pyautogui",
+        observation_type="screenshot",
+        runtime_conf=runtime_conf,
+        vllm_client=vllm_client,
+    )
+    start_time = time.perf_counter()
+    while not done and step_idx < args.max_steps:
+        this_task_logger.info(f"--------------------------- Step {step_idx + 1} starts ---------------------------")
+        prediction, actions, usage = agent.predict(instruction, obs, this_task_logger, args)
+        usage_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
+        usage_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
+        usage_tracker["total_tokens"] += usage.get("total_tokens", 0)
+        this_task_logger.info(f"\n[Prediction]:\n{prediction}\n")
+        this_task_logger.info(f"\n[Actions]:\n{actions}\n")
+        for idx, action in enumerate(actions):
+            obs, reward, done, info = env.step(action, args.sleep_after_execution)
+            with open(os.path.join(trajectory_save_dir, f"step_{step_idx + 1}_action_{idx+1}.png"),
+                    "wb") as _f:
+                _f.write(obs['screenshot'])
+            with open(os.path.join(trajectory_save_dir, "traj.jsonl"), "a") as f:
+                f.write(json.dumps({
+                    "step_num": step_idx + 1,
+                    "action_idx": idx + 1,
+                    "prediction": prediction,
+                    "action": action,
+                    "reward": reward,
+                    "done": done,
+                    "info": info,
+                    "screenshot_file": f"step_{step_idx + 1}_action_{idx+1}.png",
+                }))
+                f.write("\n")
+            if done:
+                break
+        step_idx += 1
+    # extract the value of the finished(content=...)
+    match = re.search(r"finished\s*\(\s*content\s*=\s*['\"](.*?)['\"]\s*\)", prediction)
+    if match:
+        answer = match.group(1)
+    else:
+        answer = 'no value found in finished(content=...)'
+    this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
+    with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
+        this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
+        result = env.evaluate(task_config, answer)
+    this_task_logger.info(f"Task {task_id} done in {step_idx} steps, with result: {result}")
+    end_time = time.perf_counter()
+    performance_metrics["evaluation_result"] = result
+    performance_metrics["time (min)"] = (end_time - start_time) / 60
+    performance_metrics["usage"] = usage_tracker
+    with open(os.path.join(trajectory_save_dir, "performance_metrics.json"), "w") as f:
+        json.dump(performance_metrics, f, indent=4)           
 
 def agent_loop_uitars15(
         env: RemoteDesktopEnv,
@@ -574,7 +671,183 @@ def agent_loop_claude_cua(
     performance_metrics["time (min)"] = (end_time - start_time) / 60
     performance_metrics["usage"] = usage_tracker
     with open(os.path.join(trajectory_save_dir, "performance_metrics.json"), "w") as f:
-        json.dump(performance_metrics, f, indent=4)                     
+        json.dump(performance_metrics, f, indent=4)      
+        
+def agent_loop_owl(
+        env: RemoteDesktopEnv,
+        instruction: str,
+        obs: Dict,
+        task_config: Dict,
+        this_task_logger: logging.Logger,
+        run_id: str,
+        args: argparse.Namespace,
+        **kwargs
+    ):
+    assert args.agent_name == 'Owl', "agent_loop_owl is only supported for Owl"
+    assert 'vllm_client' in kwargs, "vllm_client is required for Owl"
+    assert args.viewport_width == 1920 and args.viewport_height == 1080, f"viewport_width and viewport_height must be 1920 and 1080 for Owl for now"
+    task_id = str(task_config["task_id"])
+    trajectory_save_dir = os.path.join(args.result_dir, args.run_name, 'trajectory', task_id, run_id)
+    if not os.path.exists(trajectory_save_dir):
+        os.makedirs(trajectory_save_dir, exist_ok=True)
+    done = False
+    step_idx = 0
+    performance_metrics = {
+        "usage": {},
+        "evaluation_result": {},
+        "time (min)": 0
+    }
+    usage_tracker = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }
+    vllm_client = kwargs['vllm_client']
+    runtime_conf: dict = {
+            "infer_mode": "fn_call",
+            "input_swap": False,
+            "screen_height": args.viewport_height,
+            "screen_width": args.viewport_width,
+        }
+    agent = OwlAgent(
+        model=args.served_model_name,
+        platform=args.platform,
+        max_tokens=args.max_tokens,
+        history_n=args.history_n,
+        top_p=args.top_p,
+        temperature=args.temperature,
+        max_trajectory_length=args.max_steps,
+        action_space="pyautogui",
+        observation_type="screenshot",
+        runtime_conf=runtime_conf,
+        engine="openai",
+        vllm_client=vllm_client,
+    )
+    start_time = time.perf_counter()
+    while not done and step_idx < args.max_steps:
+        this_task_logger.info(f"--------------------------- Step {step_idx + 1} starts ---------------------------")
+        prediction, actions, usage = agent.predict(instruction, obs, this_task_logger, args)
+        usage_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
+        usage_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
+        usage_tracker["total_tokens"] += usage.get("total_tokens", 0)
+        this_task_logger.info(f"\n[Prediction]:\n{prediction}\n")
+        this_task_logger.info(f"\n[Actions]:\n{actions}\n")
+        for idx, action in enumerate(actions):
+            obs, reward, done, info = env.step(action, args.sleep_after_execution)
+            with open(os.path.join(trajectory_save_dir, f"step_{step_idx + 1}_action_{idx+1}.png"),
+                    "wb") as _f:
+                _f.write(obs['screenshot'])
+            with open(os.path.join(trajectory_save_dir, "traj.jsonl"), "a") as f:
+                f.write(json.dumps({
+                    "step_num": step_idx + 1,
+                    "action_idx": idx + 1,
+                    "prediction": prediction,
+                    "action": action,
+                    "reward": reward,
+                    "done": done,
+                    "info": info,
+                    "screenshot_file": f"step_{step_idx + 1}_action_{idx+1}.png",
+                }))
+                f.write("\n")
+            if done:
+                break
+        step_idx += 1
+    # extract the value of the finished(content=...)
+    match = re.search(r"finished\s*\(\s*content\s*=\s*['\"](.*?)['\"]\s*\)", prediction)
+    if match:
+        answer = match.group(1)
+    else:
+        answer = 'no value found in finished(content=...)'
+    this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
+    with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
+        this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
+        result = env.evaluate(task_config, answer)
+    this_task_logger.info(f"Task {task_id} done in {step_idx} steps, with result: {result}")
+    end_time = time.perf_counter()
+    performance_metrics["evaluation_result"] = result
+    performance_metrics["time (min)"] = (end_time - start_time) / 60
+    performance_metrics["usage"] = usage_tracker
+    with open(os.path.join(trajectory_save_dir, "performance_metrics.json"), "w") as f:
+        json.dump(performance_metrics, f, indent=4)         
+        
+        
+def agent_loop_mobileagentv3(
+        env: RemoteDesktopEnv,
+        instruction: str,
+        obs: Dict,
+        task_config: Dict,
+        this_task_logger: logging.Logger,
+        run_id: str,
+        args: argparse.Namespace,
+        **kwargs
+    ):
+    assert args.agent_name == 'MobileAgentV3', "agent_loop_mobileagentv3 is only supported for MobileAgentV3"
+    assert 'vllm_client' in kwargs, "vllm_client is required for MobileAgentV3"
+    assert args.viewport_width == 1920 and args.viewport_height == 1080, f"viewport_width and viewport_height must be 1920 and 1080 for MobileAgentV3 for now"
+    task_id = str(task_config["task_id"])
+    trajectory_save_dir = os.path.join(args.result_dir, args.run_name, 'trajectory', task_id, run_id)
+    if not os.path.exists(trajectory_save_dir):
+        os.makedirs(trajectory_save_dir, exist_ok=True)
+    done = False
+    step_idx = 0
+    performance_metrics = {
+        "usage": {},
+        "evaluation_result": {},
+        "time (min)": 0
+    }
+    usage_tracker = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+    }
+    vllm_client = kwargs['vllm_client']
+    
+    start_time = time.perf_counter()
+    while not done and step_idx < args.max_steps:
+        this_task_logger.info(f"--------------------------- Step {step_idx + 1} starts ---------------------------")
+        prediction, actions, usage = agent.predict(instruction, obs, this_task_logger, args)
+        usage_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
+        usage_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
+        usage_tracker["total_tokens"] += usage.get("total_tokens", 0)
+        this_task_logger.info(f"\n[Prediction]:\n{prediction}\n")
+        this_task_logger.info(f"\n[Actions]:\n{actions}\n")
+        for idx, action in enumerate(actions):
+            obs, reward, done, info = env.step(action, args.sleep_after_execution)
+            with open(os.path.join(trajectory_save_dir, f"step_{step_idx + 1}_action_{idx+1}.png"),
+                    "wb") as _f:
+                _f.write(obs['screenshot'])
+            with open(os.path.join(trajectory_save_dir, "traj.jsonl"), "a") as f:
+                f.write(json.dumps({
+                    "step_num": step_idx + 1,
+                    "action_idx": idx + 1,
+                    "prediction": prediction,
+                    "action": action,
+                    "reward": reward,
+                    "done": done,
+                    "info": info,
+                    "screenshot_file": f"step_{step_idx + 1}_action_{idx+1}.png",
+                }))
+                f.write("\n")
+            if done:
+                break
+        step_idx += 1
+    # extract the value of the finished(content=...)
+    match = re.search(r"finished\s*\(\s*content\s*=\s*['\"](.*?)['\"]\s*\)", prediction)
+    if match:
+        answer = match.group(1)
+    else:
+        answer = 'no value found in finished(content=...)'
+    this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
+    with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
+        this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
+        result = env.evaluate(task_config, answer)
+    this_task_logger.info(f"Task {task_id} done in {step_idx} steps, with result: {result}")
+    end_time = time.perf_counter()
+    performance_metrics["evaluation_result"] = result
+    performance_metrics["time (min)"] = (end_time - start_time) / 60
+    performance_metrics["usage"] = usage_tracker
+    with open(os.path.join(trajectory_save_dir, "performance_metrics.json"), "w") as f:
+        json.dump(performance_metrics, f, indent=4)                       
 
 ############# eval single task with  different agent loops based on service provider #############
 
@@ -651,9 +924,15 @@ def evaluate_single_task_vllm(
         if args.agent_name == 'UI-TARS-1.5':
             agent_loop_uitars15(env, instruction, obs, task_config, this_task_logger, run_id, args, 
                                 vllm_client=vllm_client)
+        elif args.agent_name == 'UI-TARS':
+            agent_loop_uitars(env, instruction, obs, task_config, this_task_logger, run_id, args, 
+                                vllm_client=vllm_client)
         elif args.agent_name == 'S2.5':
             agent_loop_s2_5(env, instruction, obs, task_config, this_task_logger, run_id, args, 
                                 vllm_port=vllm_client_port)
+        elif args.agent_name == 'Owl':
+            agent_loop_owl(env, instruction, obs, task_config, this_task_logger, run_id, args, 
+                                vllm_client=vllm_client)
         else:
             raise ValueError(f"Agent {args.agent_name} not supported")
     except Exception as e:

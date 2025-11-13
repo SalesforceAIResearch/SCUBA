@@ -420,6 +420,7 @@ class DesktopEnv(gym.Env):
                     self.controller.execute_python_command(fixed_command)
 
         time.sleep(pause)
+        print(f"Sleeping for {pause} seconds...")
         observation = self._get_obs()
 
         return observation, reward, done, info

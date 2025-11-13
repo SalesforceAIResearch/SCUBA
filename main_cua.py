@@ -19,7 +19,7 @@ import shutil
 
 from scuba.helpers.salesforce_commands import authorize_using_access_token, install_initial_data, retrieve_initial_state_metadata, create_project_if_not_exists
 from envs.remote_docker_env import RemoteDesktopEnv, ContainerConfig, ProviderConfig
-from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches
+from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches, capture_logs_to_file
 from args import get_args
 from lib_eval_single_task import evaluate_single_task_vllm, evaluate_single_task_api
 
@@ -43,7 +43,7 @@ def validate_args(args: argparse.Namespace):
     total_vm_hosts = len(args.docker_provider_host_list)
     max_total_envs = total_vm_hosts * args.max_containers_per_host
     assert args.total_desired_envs <= max_total_envs, f"total_desired_envs: {args.total_desired_envs} > max_total_envs: {max_total_envs}"
-    supported_agent_names = ['UI-TARS-1.5', 'OpenCUA-7B', 'OpenAI-CUA', 'S2.5', 'Claude-CUA']
+    supported_agent_names = ['UI-TARS', 'UI-TARS-1.5', 'OpenCUA-7B', 'OpenAI-CUA', 'S2.5', 'Claude-CUA', 'Owl', 'MobileAgentV3']
     assert args.agent_name in supported_agent_names, f"agent_name: {args.agent_name} is not supported"
     
     assert args.n_eval == 1, f"n_eval: {args.n_eval} is not supported for now"
@@ -185,13 +185,13 @@ def test(
         retrieve_initial_state_metadata(args.org_alias)
         install_initial_data(args.org_alias, task_config_pool)
         create_project_if_not_exists(os.path.join('orgs', 'modified_state', args.org_alias), args.org_alias)
-        if args.reset_orgs_before_eval:
-            # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
-            logger.info(f"Bulk resetting the salesforce orgs...")
-            time_start = time.perf_counter()
-            run_reset(task_config_pool, args.org_alias)
-            time_end = time.perf_counter()
-            logger.info(f"Done bulk resetting the salesforce orgs in {time_end - time_start:.2f} seconds")
+        # if args.reset_orgs_before_eval:
+        #     # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
+        #     logger.info(f"Bulk resetting the salesforce orgs...")
+        #     time_start = time.perf_counter()
+        #     run_reset(task_config_pool, args.org_alias)
+        #     time_end = time.perf_counter()
+        #     logger.info(f"Done bulk resetting the salesforce orgs in {time_end - time_start:.2f} seconds")
         
         num_envs = len(envs)
         total_num_tasks = len(task_config_pool)
@@ -216,6 +216,16 @@ def test(
         for batch_idx, task_config_pool in enumerate(task_config_pool_batches):
             num_tasks = len(task_config_pool)
             logger.info(f"Starting batch {batch_idx} with {num_tasks} tasks")
+            if args.reset_orgs_before_eval:
+                # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
+                logger.info(f"resetting for batch {batch_idx}...")
+                time_start = time.perf_counter()
+                file=os.path.join(args.result_dir, args.run_name, f"reset_batch_{batch_idx:03d}.log")
+                with capture_logs_to_file(file):
+                    run_reset(task_config_pool, args.org_alias)
+                time_end = time.perf_counter()
+                logger.info(f"Done resetting for batch {batch_idx} in {time_end - time_start:.2f} seconds")
+        
             with ProcessPool(max_workers=num_envs) as pool:
                 task_idx = 0
                 completed_tasks = 0

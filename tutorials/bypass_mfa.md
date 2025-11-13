@@ -17,11 +17,13 @@ This is a bit more complicated since you need to create a desktop environment fi
 ```bash
 # create a desktop environment first
 python tests/test_create_remote_desktop.py 
+# keep the terminal open and don't close the container
 # connect to the remote desktop environment's Chrome browser via CDP
 python scripts/manual_login_to_sf.py --mode cua --save_storage_state 
 ```
 After running the script, try to use the VNC viewer (normally running on port 8006) to access the remote desktop environment. You should see the Salesforce login page. Enter the verification code sent to your email, and you will be logged in successfully. Follow the instructions in the terminal to save the storage state.
 
+Now you can close the container by pressing `Enter` in the terminal.
 
 
 ##  step 2: test the login by running the following command
@@ -38,7 +40,7 @@ python tests/test_cua_login_sf.py
 You can use the VNC viewer to check if the login is successful. Also you can check the `tmp` directory to see the screenshot of the desktop environment and the screenshot after logging in to Salesforce.
 
 > [!WARNING]
-> Unfortunately, you may need to run this step multiple times since the browser states may expire after some time. As far as we know, the browser states remain valid during our tests.
+> Unfortunately, you may need to run this step multiple times since the browser states may expire after some time. As far as we know, the browser states remain valid during our tests and last for a few days.
 
 ## Temporarily By-pass two-way authentication (Deprecated as of 2025-10-20)
 - Click the `Setup` gear icon in the top right corner of the page and click `Setup` under the `Setup Menu`.
