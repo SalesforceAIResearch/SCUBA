@@ -15,6 +15,7 @@ class Args:
     vllm_host: str = "localhost"
     vllm_port: int = 2025
     max_retry_per_request: int = 3
+    served_model_name: str = "UI-TARS-2B-SFT"
 
 args = Args()
     
@@ -36,10 +37,9 @@ runtime_conf: dict = {
     }
 
 agent = UITARSAgent(
-    model="GUI-UI-TARS-7B",
+    model=args.served_model_name,
     platform="ubuntu",
     top_p=0.9,
-    top_k=1.0,
     temperature=0.0,
     action_space="pyautogui",
     observation_type="screenshot",

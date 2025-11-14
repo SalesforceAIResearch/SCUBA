@@ -15,6 +15,7 @@ from agents.s2_5.agents.grounding import OSWorldACI
 from agents.anthropic.main import AnthropicAgent
 from agents.owl_agent import OwlAgent
 from agents.mobileagent_v3.mobile_agent import MobileAgentV3
+from agents.uitars import UITARSAgent
 from dataclasses import dataclass
 import json
 
@@ -38,6 +39,44 @@ def pil_to_bytes(image):
     img_bytes = buffer.getvalue()
     # img_b64 = base64.b64encode(img_bytes).decode("utf-8")
     return img_bytes
+
+def test_uitars_termination_answer(instruction, obs):
+    
+    @dataclass
+    class Args:
+        max_retry_per_request: int = 3 
+        served_model_name: str = "UI-TARS-2B-SFT"
+    
+    runtime_conf: dict = {
+        "infer_mode": "qwen2vl_no_calluser",
+        "prompt_style": "qwen2vl_user",
+        "input_swap": False, # this is different from the OSWORLD implementation; see https://github.com/xlang-ai/OSWorld/issues/296
+        "language": "English",
+        "history_n": 1,
+        "screen_height": 1080,
+        "screen_width": 1920,
+    }
+    args = Args()
+
+    agent = UITARSAgent(
+        model=args.served_model_name,
+        platform="ubuntu",
+        top_p=0.9,
+        temperature=0.0,
+        action_space="pyautogui",
+        observation_type="screenshot",
+        runtime_conf=runtime_conf,
+        vllm_client=vllm_client,
+    )
+    
+    prediction, actions, usage = agent.predict(instruction, obs, this_task_logger, args)
+    # print(f"prediction: {prediction}")
+    match = re.search(r"finished\s*\(\s*content\s*=\s*['\"](.*?)['\"]\s*\)", prediction)
+    if match:
+        answer = match.group(1)
+    else:
+        answer = 'no value found in finished(content=...)'
+    return answer
 
 def test_uitars15_termination_answer(instruction, obs):
     runtime_conf: dict = {
@@ -300,6 +339,9 @@ if __name__ == "__main__":
     print(f"[instruction] {instruction}")
     print(f"[GT] 15 minutes")
     
+    answer = test_uitars_termination_answer("I've finished the task. Return 'i'm done!'.", obs)
+    print(f"[uitars] Answer: {answer}")
+    
     # answer = test_uitars15_termination_answer(instruction, obs)
     # print(f"[uitars15] Answer: {answer}")
 
@@ -315,5 +357,5 @@ if __name__ == "__main__":
     # answer = test_owl_termination_answer(instruction, obs)
     # print(f"[owl] Answer: {answer}")
     
-    answer = test_mobileagentv3_termination_answer(instruction, obs)
-    print(f"[mobileagentv3] Answer: {answer}")
+    # answer = test_mobileagentv3_termination_answer(instruction, obs)
+    # print(f"[mobileagentv3] Answer: {answer}")

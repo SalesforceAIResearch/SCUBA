@@ -14,7 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from typing import Union, Dict, Any
 import re
-
+from agents.uitars import UITARSAgent
 from agents.uitars15_v1 import UITARS15Agent
 from agents.opencua_agent import OpenCUAAgent
 from agents.openaicua_agent import OpenAICUAAgent
@@ -121,7 +121,6 @@ def agent_loop_uitars(
         model=args.served_model_name,
         platform=args.platform,
         top_p=args.top_p,
-        top_k=args.top_k,
         temperature=args.temperature,        
         action_space="pyautogui",
         observation_type="screenshot",
@@ -162,7 +161,7 @@ def agent_loop_uitars(
     if match:
         answer = match.group(1)
     else:
-        answer = 'no value found in finished(content=...)'
+        answer = 'fail to find the value in finished(content=...)'
     this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
@@ -261,8 +260,8 @@ def agent_loop_uitars15(
     if match:
         answer = match.group(1)
     else:
-        answer = 'no value found in finished(content=...)'
-    this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
+        answer = 'fail to find the value in the prediction'
+    this_task_logger.info(f"Value parsed from the prediction: {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
         result = env.evaluate(task_config, answer)
@@ -348,7 +347,7 @@ def agent_loop_opencua7b(
             if done:
                 break
         step_idx += 1
-    answer = 'no value found in response'
+    answer = "fail to find the value in the response"
     if 'answer' in agent.cots[-1].keys():
         answer = agent.cots[-1]['answer']
     else:
@@ -456,7 +455,7 @@ def agent_loop_openaicua(
         else:
             answer = f"response['response'] is not a string\n{response['response']}"
     except:
-        answer = 'no value found in response'
+        answer = 'fail to find the value in the response'
     this_task_logger.info(f"Value parsed from the response['response'] (if the agent terminates with an answer): {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
@@ -569,9 +568,9 @@ def agent_loop_s2_5(
         step_idx += 1
     try:
         match = re.search(r"agent\.done\(\s*['\"](.*?)['\"]\s*\)", response['plan_code'])
-        answer = match.group(1) if match else "no value found in agent.done('...')"
+        answer = match.group(1) if match else "fail to find the value in agent.done('...')"
     except:
-        answer = 'no value found in response'
+        answer = 'fail to find the value in the response'
     this_task_logger.info(f"Value parsed from the response['response'] (if the agent terminates with an answer): {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
@@ -658,7 +657,7 @@ def agent_loop_claude_cua(
             if done:
                 break
         step_idx += 1
-    answer = 'no value found in reasoning'
+    answer = 'fail to find the value in the reasoning'
     for seg in reasoning:
         if 'text' in seg:
             answer = seg['text']
@@ -753,7 +752,7 @@ def agent_loop_owl(
             if done:
                 break
         step_idx += 1
-    answer = 'no value found in prediction'
+    answer = 'fail to find the value in the prediction'
     if "<thinking>" in prediction and "</thinking>" in prediction:
         answer = prediction.split("<thinking>")[-1].split("</thinking>")[0]
     elif "<thinking>" in prediction:
@@ -879,7 +878,7 @@ def agent_loop_mobileagentv3(
                 break
         step_idx += 1
     # extract the value of the finished(content=...)
-    answer = 'no value found in prediction'
+    answer = 'fail to find the value in the prediction'
     try:    
         candidate = prediction['operator']['action']
         candidate = json.loads(candidate)
@@ -887,7 +886,7 @@ def agent_loop_mobileagentv3(
             answer = candidate['text']
     except Exception as e:
         this_task_logger.error(f"Error parsing the answer from the prediction: {e}")
-        answer = 'no value found in prediction'
+        answer = 'fail to find the value in the prediction'
     this_task_logger.info(f"Value parsed from the prediction): {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")

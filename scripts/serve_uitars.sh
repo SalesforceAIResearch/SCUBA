@@ -8,13 +8,19 @@ which python
 
 pkill -f "vllm.entrypoints.openai.api_server"
 
-VLLM_LOG_FILE="vllm_log_file.log"
+mkdir -p tmp
 
-for PORT in 2025 2026 2027 2028 2029 2030 2031 2032; do
+VLLM_LOG_FILE="tmp/vllm_log_file.log"
+
+NUM_REPLICAS=1
+
+echo "Serving $NUM_REPLICAS replicas of the model $MODEL_NAME from $CKPT_PATH on the ports $(seq 2025 $((2025 + NUM_REPLICAS - 1)))"
+
+for PORT in $(seq 2025 $((2025 + NUM_REPLICAS - 1))); do
     GPU_ID=$((PORT - 2025))
     echo "Serving model $MODEL_NAME from $CKPT_PATH on the port $PORT with GPU $GPU_ID"
     CUDA_VISIBLE_DEVICES=$GPU_ID python3 -m vllm.entrypoints.openai.api_server \
-        --api-key token-abc123 \
+         --api-key token-abc123 \
         --model $CKPT_PATH \
         --served-model-name $SERVED_MODEL_NAME \
         --host localhost \
@@ -26,7 +32,7 @@ for PORT in 2025 2026 2027 2028 2029 2030 2031 2032; do
         --max-model-len 32768 > $VLLM_LOG_FILE 2>&1 &    
 done
 
-for PORT in 2025 2026 2027 2028 2029 2030 2031 2032; do
+for PORT in $(seq 2025 $((2025 + NUM_REPLICAS - 1))); do
     until curl -H "Authorization: Bearer token-abc123" http://localhost:$PORT/v1/models > /dev/null; do
         # echo "Waiting for vLLM server to start on port $PORT..."
         sleep 30

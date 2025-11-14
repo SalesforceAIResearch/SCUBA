@@ -533,7 +533,7 @@ def _load_crmbench_cua(trajectory_file_dir):
             full_trajectory.append(data)
     with open(os.path.join(trajectory_file_dir, 'performance_metrics.json'), 'r') as f:
         result = json.load(f)
-    if 'uitars15' in trajectory_file_dir:
+    if 'uitars15' or 'uitars' in trajectory_file_dir:
         results = _load_step_data_uitars15(trajectory_file_dir, full_trajectory)
     elif 'openaicua' in trajectory_file_dir:
         results = _load_step_data_openaicua(trajectory_file_dir, full_trajectory)
