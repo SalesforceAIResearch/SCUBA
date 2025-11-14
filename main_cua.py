@@ -215,6 +215,9 @@ def test(
         
         for batch_idx, task_config_pool in enumerate(task_config_pool_batches):
             num_tasks = len(task_config_pool)
+            if num_tasks == 0:
+                logger.info(f"Batch {batch_idx} has no tasks. Skipping...")
+                continue
             logger.info(f"Starting batch {batch_idx} with {num_tasks} tasks")
             if args.reset_orgs_before_eval:
                 # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first

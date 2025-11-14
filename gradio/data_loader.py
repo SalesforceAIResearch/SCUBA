@@ -445,9 +445,50 @@ def parse_action_fncall(text, height=1080, width=1920):
     })
     return actions
 
+def _load_step_data_mobileagentv3(trajectory_file_dir, full_trajectory):
+    results = []
+    num = r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?"
+    pattern = rf"moveTo\(\s*({num})\s*,\s*({num})\s*\).*dragTo\(\s*({num})\s*,\s*({num})"
+    for idx, step in enumerate(full_trajectory):
+        step_num = step['step_num']
+        action_idx = step['action_idx']
+        prediction = step['prediction']
+        
+        manager = prediction['manager']
+        operator = prediction['operator']
+        grounding = prediction['grounding']
+        reflector = prediction['reflector']
+        
+        if idx == 0:
+            screenshot = os.path.join(trajectory_file_dir, 'initial_obs.png')
+        else:
+            prev_step = full_trajectory[idx - 1]
+            screenshot = os.path.join(trajectory_file_dir, prev_step['screenshot_file'])
+        screenshot = Image.open(screenshot)
+        
+        grounding_response = grounding.get('response', None)
+        if  grounding_response:
+            action_type = grounding_response['action_type']
+            if action_type in ['click', 'double_click', 'right_click', 'type']:
+                x, y = grounding_response['x'], grounding_response['y']
+                screenshot = draw_circle(screenshot, x, y, 5, 'red')
+            elif action_type in ['drag']:
+                action_code = grounding_response['action_code']
+                match = re.search(pattern, action_code)
+                if match:
+                    x1, y1, x2, y2 = map(float, match.groups())
+                    screenshot = draw_arrow(screenshot, x1, y1, x2, y2, arrowhead_length=10, arrowhead_angle=30, fill="red", width=5)
+        results.append({
+            "screenshot": screenshot,
+            'manager': manager,
+            'operator': operator,
+            'grounding': grounding,
+            'reflector': reflector,
+        })
+    return results
+
 def _load_step_data_owl(trajectory_file_dir, full_trajectory):
     results = []
-    pattern = re.compile(r'\((\d+),\s*(\d+)')
     for idx, step in enumerate(full_trajectory):
         step_num = step['step_num']
         action_idx = step['action_idx']
@@ -482,7 +523,7 @@ def _load_step_data_owl(trajectory_file_dir, full_trajectory):
             'conclusion': conclusion,
         })
     return results
-            
+
 
 def _load_crmbench_cua(trajectory_file_dir):
     full_trajectory = []
@@ -504,6 +545,8 @@ def _load_crmbench_cua(trajectory_file_dir):
         results = _load_step_data_claudecua(trajectory_file_dir, full_trajectory)
     elif 'owl' in trajectory_file_dir:
         results = _load_step_data_owl(trajectory_file_dir, full_trajectory)
+    elif 'mobileagentv3' in trajectory_file_dir:
+        results = _load_step_data_mobileagentv3(trajectory_file_dir, full_trajectory)
     else:
         raise NotImplementedError(f"Trajectory file directory {trajectory_file_dir} is not supported")
     evaluation_result = result['evaluation_result']

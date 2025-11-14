@@ -24,15 +24,15 @@ python main_cua.py \
     --sleep_after_execution 5 \
     --docker_provider_host_list $DOCKER_PROVIDER_HOST \
     --result_dir outputs \
-    --run_name owl7b_zero_shot \
-    --agent_name Owl \
+    --run_name mobileagentv3_zero_shot \
+    --agent_name MobileAgentV3 \
     --served_model_name GUI-Owl-7B \
     --max_steps 30 \
     --n_eval 1 \
     --temperature 1.0 \
     --vllm_client_port_start 2025 \
-    --reset_orgs_before_eval \
     --run_as_debug_mode \
+    --reset_orgs_before_eval \
     --debug_task_id_list sales_001_001 admin_001_001 service_001_001 admin_039_001
 
 

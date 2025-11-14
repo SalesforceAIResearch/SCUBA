@@ -72,6 +72,13 @@ def get_args():
     ## claude agent configs
     parser.add_argument("--claude_model", type=str, default="claude-4-sonnet-20250514")
     parser.add_argument("--claude_service_provider", type=str, default="bedrock", choices=["bedrock", "vertex", "anthropic"])
+    
+    ## mobileagentv3 agent configs
+    parser.add_argument("--mobileagentv3_guide_path", type=str, default="agents/mobileagent_v3/experience.json")
+    parser.add_argument("--mobileagentv3_rag_path", type=str, default="agents/mobileagent_v3/Perplexica_rag_knowledge_verified.json")
+    parser.add_argument("--mobileagentv3_enable_rag", type=int, default=0)
+    parser.add_argument("--mobileagentv3_grounding_stage", type=int, default=1)
+    parser.add_argument("--mobileagentv3_grounding_info_level", type=int, default=1)
 
     # bu agent configs
     parser.add_argument("--max_actions_per_step", type=int, default=20)

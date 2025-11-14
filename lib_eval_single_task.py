@@ -22,6 +22,7 @@ from agents.s2_5.agents.agent_s import AgentS2_5
 from agents.s2_5.agents.grounding import OSWorldACI
 from agents.anthropic.main import AnthropicAgent
 from agents.owl_agent import OwlAgent
+from agents.mobileagent_v3.mobile_agent import MobileAgentV3
 from envs.remote_docker_env import RemoteDesktopEnv
 
 load_dotenv(override=True)
@@ -816,7 +817,7 @@ def agent_loop_mobileagentv3(
         reflector_engine_params,
         grounding_engine_params,
     )
-    
+    args.max_trajectory_length = args.max_steps
     start_time = time.perf_counter()
     while not done and step_idx < args.max_steps:
         this_task_logger.info(f"--------------------------- Step {step_idx + 1} starts ---------------------------")
@@ -858,6 +859,7 @@ def agent_loop_mobileagentv3(
             done = True
             reward = None
         else:
+            idx = 0
             obs = env._get_obs()
             with open(os.path.join(trajectory_save_dir, f"step_{step_idx + 1}_action_{idx+1}.png"),
                     "wb") as _f:
@@ -982,6 +984,9 @@ def evaluate_single_task_vllm(
         elif args.agent_name == 'Owl':
             agent_loop_owl(env, instruction, obs, task_config, this_task_logger, run_id, args, 
                                 vllm_client=vllm_client)
+        elif args.agent_name == 'MobileAgentV3':
+            agent_loop_mobileagentv3(env, instruction, obs, task_config, this_task_logger, run_id, args, 
+                                vllm_port=vllm_client_port)
         else:
             raise ValueError(f"Agent {args.agent_name} not supported")
     except Exception as e:

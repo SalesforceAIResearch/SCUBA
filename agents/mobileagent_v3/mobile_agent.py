@@ -327,13 +327,13 @@ class MobileAgentV3:
             this_task_logger.info("### Manager ###\n")
 
             rag_info = ""
-            if args.enable_rag > 0:
-                rag_dict = json.load(open(args.rag_path, 'r'))
+            if args.mobileagentv3_enable_rag > 0:
+                rag_dict = json.load(open(args.mobileagentv3_rag_path, 'r'))
                 rag_info = rag_dict[instruction]
 
             guide = ""
-            if args.guide_path != "":
-                guide_dict = json.load(open(args.guide_path, 'r'))
+            if args.mobileagentv3_guide_path != "":
+                guide_dict = json.load(open(args.mobileagentv3_guide_path, 'r'))
                 if instruction in guide_dict:
                     guide = guide_dict[instruction]
 
@@ -371,7 +371,7 @@ class MobileAgentV3:
         else:
             this_task_logger.info("### Operator ###\n")
             action_decision_start_time = time.time()
-            prompt_action = executor.get_prompt(self.info_pool, args.grounding_stage)
+            prompt_action = executor.get_prompt(self.info_pool, args.mobileagentv3_grounding_stage)
             output_action, message_operator, operator_usage = executor.predict(prompt_action, [before_screenshot])
 
             total_usage["prompt_tokens"] += operator_usage["prompt_tokens"]
@@ -422,11 +422,11 @@ class MobileAgentV3:
             }
         }
         try:
-            if args.grounding_stage > 0:
+            if args.mobileagentv3_grounding_stage > 0:
                 grouding_model = Grounding(self.grounding_enging_params)
-                if args.grounding_info_level == 0:
+                if args.mobileagentv3_grounding_info_level == 0:
                     converted_action, grounding_messages, grounding_usage = convert_fc_action_to_json_action_grounding(action_object_str, grouding_model, [before_screenshot])
-                elif args.grounding_info_level == 1:
+                elif args.mobileagentv3_grounding_info_level == 1:
                     grounding_info = "Thought: " + action_thought + "\nElement description: "
                     converted_action, grounding_messages, grounding_usage = convert_fc_action_to_json_action_grounding(action_object_str, grouding_model, [before_screenshot], grounding_info)
                 total_usage["prompt_tokens"] += grounding_usage["prompt_tokens"]
@@ -440,7 +440,7 @@ class MobileAgentV3:
                     }
             else:
                 # converted_action = convert_fc_action_to_json_action(action_object_str)
-                raise ValueError(f"Grounding stage is {args.grounding_stage} is not supported.")
+                raise ValueError(f"Grounding stage is {args.mobileagentv3_grounding_stage} is not supported.")
 
         except Exception as e:
             this_task_logger.error('Failed to convert the output to a valid action.')
