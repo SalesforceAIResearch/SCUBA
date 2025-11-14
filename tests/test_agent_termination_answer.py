@@ -14,12 +14,17 @@ from agents.s2_5.agents.agent_s import AgentS2_5
 from agents.s2_5.agents.grounding import OSWorldACI
 from agents.anthropic.main import AnthropicAgent
 from agents.owl_agent import OwlAgent
+from agents.mobileagent_v3.mobile_agent import MobileAgentV3
 from dataclasses import dataclass
-
+import json
 
 
 this_task_logger = logging.getLogger(f"task")
 this_task_logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+this_task_logger.addHandler(console_handler)
+
 httpx_client = httpx.Client(timeout=60)
 vllm_client = openai.OpenAI(
                 base_url=f"http://localhost:2025/v1",  # vLLM service address
@@ -210,6 +215,82 @@ def test_owl_termination_answer(instruction, obs):
         answer = prediction.split("<thinking>")[1]
     return answer
 
+def test_mobileagentv3_termination_answer(instruction, obs):
+    class Args:
+        max_retry_per_request: int = 3
+        vllm_api_key: str = "token-abc123"
+        served_model_name: str = "GUI-Owl-7B"
+        guide_path: str = "agents/mobileagent_v3/experience.json"
+        rag_path: str = "agents/mobileagent_v3/Perplexica_rag_knowledge_verified.json"
+        enable_rag: int = 0
+        max_trajectory_length: int = 50
+        grounding_stage: int = 1
+        grounding_info_level: int = 1
+
+    api_url = f"http://localhost:2025/v1"
+    args = Args()
+    manager_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+       
+    worker_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+
+    reflector_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+
+    grounding_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+    
+    agent = MobileAgentV3(
+        manager_engine_params,
+        worker_engine_params,
+        reflector_engine_params,
+        grounding_engine_params,
+    )
+    class EnvMock:
+        def __init__(self, obs):
+            self.obs = obs
+        def _get_obs(self):
+            return self.obs
+        def step(self, action, wait_after_action_seconds):
+            return self.obs, 0, False, {}
+    env_mock = EnvMock(obs)
+
+    global_state, action_code, step_status, reward, done, usage = agent.step(instruction, env_mock, args, this_task_logger)
+
+    prediction = {}
+
+    try:
+        manager_response = global_state['manager']['parsed_response']
+        prediction['manager'] = manager_response
+    except Exception as e:
+        prediction['manager'] = {'error': f"manager response not found; maybe is skiped."}
+
+    try:
+        operator_response = global_state['operator']['parsed_response']
+        prediction['operator'] = operator_response
+    except Exception as e:
+        prediction['operator'] = {'error': f"operator response not found; something went wrong."}
+
+    try:
+        grounding_response = global_state['grounding']['parsed_response']
+        prediction['grounding'] = {'response': grounding_response}
+    except Exception as e:
+        prediction['grounding'] = {'error': f"grounding response not found; something went wrong or in the answer phase."}
+
+    try:
+        reflector_response = global_state['reflector']['response']
+        prediction['reflector'] = {'response': reflector_response}
+    except Exception as e:
+        prediction['reflector'] = {'error': f"reflector response not found; something went wrong or in the answer phase."}
+    
+    answer = 'no value found in prediction'
+    try:    
+        candidate = prediction['operator']['action']
+        candidate = json.loads(candidate)
+        if candidate['action'] == 'answer':
+            answer = candidate['text']
+    except Exception as e:
+        this_task_logger.error(f"Error: {e}")
+        answer = 'no value found in prediction'
+    
+    return answer
 
 if __name__ == "__main__":
     
@@ -231,5 +312,8 @@ if __name__ == "__main__":
     # answer = test_s2_5_termination_answer(instruction, obs)
     # print(f"[s2_5] Answer: {answer}")
     
-    answer = test_owl_termination_answer(instruction, obs)
-    print(f"[owl] Answer: {answer}")
+    # answer = test_owl_termination_answer(instruction, obs)
+    # print(f"[owl] Answer: {answer}")
+    
+    answer = test_mobileagentv3_termination_answer(instruction, obs)
+    print(f"[mobileagentv3] Answer: {answer}")

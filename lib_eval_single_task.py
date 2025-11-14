@@ -781,7 +781,7 @@ def agent_loop_mobileagentv3(
         **kwargs
     ):
     assert args.agent_name == 'MobileAgentV3', "agent_loop_mobileagentv3 is only supported for MobileAgentV3"
-    assert 'vllm_client' in kwargs, "vllm_client is required for MobileAgentV3"
+    assert 'vllm_port' in kwargs, "vllm_port is required for MobileAgentV3"
     assert args.viewport_width == 1920 and args.viewport_height == 1080, f"viewport_width and viewport_height must be 1920 and 1080 for MobileAgentV3 for now"
     task_id = str(task_config["task_id"])
     trajectory_save_dir = os.path.join(args.result_dir, args.run_name, 'trajectory', task_id, run_id)
@@ -799,31 +799,77 @@ def agent_loop_mobileagentv3(
         "completion_tokens": 0,
         "total_tokens": 0,
     }
-    vllm_client = kwargs['vllm_client']
+    vllm_port = kwargs["vllm_port"]
+    api_url = f"http://{args.vllm_host}:{vllm_port}/v1"
+    
+    manager_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+       
+    worker_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+
+    reflector_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+
+    grounding_engine_params = {"engine_type": 'openai', "api_key": args.vllm_api_key, "base_url": api_url, "model": args.served_model_name}
+    
+    agent = MobileAgentV3(
+        manager_engine_params,
+        worker_engine_params,
+        reflector_engine_params,
+        grounding_engine_params,
+    )
     
     start_time = time.perf_counter()
     while not done and step_idx < args.max_steps:
         this_task_logger.info(f"--------------------------- Step {step_idx + 1} starts ---------------------------")
-        prediction, actions, usage = agent.predict(instruction, obs, this_task_logger, args)
+        global_state, action_code, step_status, reward, done, usage = agent.step(instruction, env, args, this_task_logger)
         usage_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
         usage_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
         usage_tracker["total_tokens"] += usage.get("total_tokens", 0)
+        
+        prediction = {}
+
+        try:
+            manager_response = global_state['manager']['parsed_response']
+            prediction['manager'] = manager_response
+        except Exception as e:
+            prediction['manager'] = {'error': f"manager response not found; maybe is skiped."}
+
+        try:
+            operator_response = global_state['operator']['parsed_response']
+            prediction['operator'] = operator_response
+        except Exception as e:
+            prediction['operator'] = {'error': f"operator response not found; something went wrong."}
+
+        try:
+            grounding_response = global_state['grounding']['parsed_response']
+            prediction['grounding'] = {'response': grounding_response}
+        except Exception as e:
+            prediction['grounding'] = {'error': f"grounding response not found; something went wrong."}
+
+        try:
+            reflector_response = global_state['reflector']['response']
+            prediction['reflector'] = {'response': reflector_response}
+        except Exception as e:
+            prediction['reflector'] = {'error': f"reflector response not found; something went wrong."}
+        
         this_task_logger.info(f"\n[Prediction]:\n{prediction}\n")
-        this_task_logger.info(f"\n[Actions]:\n{actions}\n")
-        for idx, action in enumerate(actions):
-            obs, reward, done, info = env.step(action, args.sleep_after_execution)
+        
+        if step_status is False:
+            eval_flag = False
+            done = True
+            reward = None
+        else:
+            obs = env._get_obs()
             with open(os.path.join(trajectory_save_dir, f"step_{step_idx + 1}_action_{idx+1}.png"),
                     "wb") as _f:
                 _f.write(obs['screenshot'])
             with open(os.path.join(trajectory_save_dir, "traj.jsonl"), "a") as f:
                 f.write(json.dumps({
                     "step_num": step_idx + 1,
-                    "action_idx": idx + 1,
+                    "action_idx": 1,
                     "prediction": prediction,
-                    "action": action,
+                    "action": action_code,
                     "reward": reward,
                     "done": done,
-                    "info": info,
                     "screenshot_file": f"step_{step_idx + 1}_action_{idx+1}.png",
                 }))
                 f.write("\n")
@@ -831,12 +877,16 @@ def agent_loop_mobileagentv3(
                 break
         step_idx += 1
     # extract the value of the finished(content=...)
-    match = re.search(r"finished\s*\(\s*content\s*=\s*['\"](.*?)['\"]\s*\)", prediction)
-    if match:
-        answer = match.group(1)
-    else:
-        answer = 'no value found in finished(content=...)'
-    this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
+    answer = 'no value found in prediction'
+    try:    
+        candidate = prediction['operator']['action']
+        candidate = json.loads(candidate)
+        if candidate['action'] == 'answer':
+            answer = candidate['text']
+    except Exception as e:
+        this_task_logger.error(f"Error parsing the answer from the prediction: {e}")
+        answer = 'no value found in prediction'
+    this_task_logger.info(f"Value parsed from the prediction): {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
         result = env.evaluate(task_config, answer)

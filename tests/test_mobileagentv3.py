@@ -20,7 +20,6 @@ class Args:
     max_trajectory_length: int = 50
     grounding_stage: int = 1
     grounding_info_level: int = 1
-    is_mock: bool = False
 
 from agents.mobileagent_v3.mobile_agent import MobileAgentV3
 args = Args()

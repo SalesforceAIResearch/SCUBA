@@ -63,6 +63,11 @@ def convert_fc_action_to_json_action_grounding(
                 grounding_usage[key] += grounding_usage2[key]
         else:
             grounding_messages = None
+            grounding_usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            }
 
         if action_type == 'click':
             x, y = convert_xy(x, y)
@@ -319,7 +324,7 @@ class MobileAgentV3:
                 skip_manager = True
             
         if not skip_manager:
-            this_task_logger.info("\n### Manager ... ###\n")
+            this_task_logger.info("### Manager ###\n")
 
             rag_info = ""
             if args.enable_rag > 0:
@@ -352,7 +357,7 @@ class MobileAgentV3:
             global_state['manager']['parsed_response'] = parsed_result_planning
             planning_end_time = time.time()
 
-            this_task_logger.info('\n\nPlan: ' + self.info_pool.plan)
+            this_task_logger.info('Plan: ' + self.info_pool.plan)
             this_task_logger.info('Current subgoal: ' + self.info_pool.current_subgoal)
             this_task_logger.info('Planning thought: ' + parsed_result_planning['thought'] + "\n")
 
@@ -364,7 +369,7 @@ class MobileAgentV3:
             action_description = "Finished by planner"
         
         else:
-            this_task_logger.info("\n### Operator ... ###\n")
+            this_task_logger.info("### Operator ###\n")
             action_decision_start_time = time.time()
             prompt_action = executor.get_prompt(self.info_pool, args.grounding_stage)
             output_action, message_operator, operator_usage = executor.predict(prompt_action, [before_screenshot])
@@ -392,9 +397,9 @@ class MobileAgentV3:
                 self.info_pool.error_descriptions.append("invalid action format, do nothing.")
                 return global_state, None, False, None, False, total_usage
         
-        this_task_logger.info('\n\nThought: ' + action_thought)
+        this_task_logger.info('\nThought: ' + action_thought)
         this_task_logger.info('Action: ' + action_object_str)
-        this_task_logger.info('Action description: ' + action_description + '\n\n')
+        this_task_logger.info('Action description: ' + action_description + '\n')
 
         format_action_object_str = action_object_str
 
@@ -479,7 +484,7 @@ class MobileAgentV3:
 
         after_screenshot = obs['screenshot']
 
-        this_task_logger.info("\n### Reflector ... ###\n")
+        this_task_logger.info("### Reflector ###\n")
         if converted_action.action_type != 'answer':
             action_reflection_start_time = time.time()
             prompt_action_reflect = reflector.get_prompt(self.info_pool)
@@ -511,8 +516,12 @@ class MobileAgentV3:
                 action_outcome = "C"
             else:
                 raise ValueError("Invalid outcome:", outcome)
+        else:
+            action_outcome = "in the answer phase"
+            error_description = "in the answer phase"
+            progress_status = "in the answer phase"
         
-        this_task_logger.info('\n\nAction reflection outcome: ' + action_outcome)
+        this_task_logger.info('Action reflection outcome: ' + action_outcome)
         this_task_logger.info('Action reflection error description: ' + error_description)
         this_task_logger.info('Action reflection progress status: ' + progress_status +"\n")
         self.info_pool.action_history.append(json.loads(action_object_str))
