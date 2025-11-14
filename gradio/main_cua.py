@@ -9,7 +9,8 @@ from data_loader import (
 )
 
 
-DEFAULT_EXP_DIR = '../examples/sample_outputs'
+# DEFAULT_EXP_DIR = '../examples/sample_outputs'
+DEFAULT_EXP_DIR = '../outputs'
 
 ALL_CATEGORIES = ['admin', 'sales', 'service']
 INSTANCE_TO_CATEGORY = {}

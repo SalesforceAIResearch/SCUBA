@@ -358,6 +358,132 @@ def _load_step_data_claudecua(trajectory_file_dir, full_trajectory):
         })
     return results
 
+
+def convert_point_format(x, y):
+    x_ = x * 1920 / 1932
+    y_ = y * 1080 / 1092
+    return x_, y_
+
+def parse_action_fncall(text, height=1080, width=1920):
+
+    thought = ""
+    if "<thinking>" in text and "</thinking>" in text:
+        thought = text.split("<thinking>")[-1].split("</thinking>")[0]
+    elif "<thinking>" in text:
+        thought = text.split("<thinking>")[1]
+
+    conclusion = ""
+    if "<conclusion>" in text and "</conclusion>" in text:
+        conclusion = text.split("<conclusion>")[-1].split("</conclusion>")[0]
+    elif "<conclusion>" in text:
+        conclusion = text.split("<conclusion>")[1]
+    if conclusion == "" and thought != "":
+        conclusion = thought
+
+    if "<tool_call>" in text and "</tool_call>" in text:
+        action = text.split("<tool_call>")[-1].split("</tool_call>")[0]
+    else:
+        action = '{"name": "computer_use"' + text.split('{"name": "computer_use"')[1].split("}}")[0] + '}}'
+        
+    action_json = json.loads(action.strip('\n'))['arguments']
+
+    if action_json['action'] == "key":
+        action_type = 'hotkey'
+        keys = action_json['keys']
+        keys_str = ""
+        for key in keys:
+            keys_str += " " + key
+        action_inputs = {"hotkey": keys_str}
+    elif action_json['action'] == "type":
+        action_type = "type"
+        if 'clear' not in action_json:
+            action_json['clear'] = 0
+        if 'enter' not in action_json:
+            action_json['enter'] = 0
+        action_inputs = {'content': action_json['text'], 'clear': int(action_json['clear']), 'enter': int(action_json['enter'])}
+    elif action_json['action'] == "mouse_move":
+        action_type = "hover"
+        x, y = convert_point_format(action_json['coordinate'][0], action_json['coordinate'][1])
+        action_inputs = {'start_box': [x, y]}
+    elif action_json['action'] == "left_click_drag" or action_json['action'] == "drag":
+        action_type = "drag"
+        x, y = convert_point_format(action_json['coordinate'][0], action_json['coordinate'][1])
+        x2, y2 = convert_point_format(action_json['coordinate2'][0], action_json['coordinate2'][1])
+        action_inputs = {'start_box': [x, y], 'end_box': [x2, y2]}
+    elif action_json['action'] == "left_click" or action_json['action'] == "click":
+        action_type = "click"
+        x, y = convert_point_format(action_json['coordinate'][0], action_json['coordinate'][1])
+        action_inputs = {'start_box': [x, y]}
+    elif action_json['action'] == "right_click":
+        action_type = "right_single"
+        x, y = convert_point_format(action_json['coordinate'][0], action_json['coordinate'][1])
+        action_inputs = {'start_box': [x, y]}
+    elif action_json['action'] == "double_click":
+        action_type = "left_double"
+        x, y = convert_point_format(action_json['coordinate'][0], action_json['coordinate'][1])
+        action_inputs = {'start_box': [x, y]}
+    elif action_json['action'] == "scroll":
+        action_type = "scroll"
+        action_inputs = {'pixels': action_json['pixels']}
+    elif action_json['action'] == "terminate":
+        if action_json['status'] == 'success':
+            action_type = "finished"
+        else:
+            action_type = "fail"
+        action_inputs = {}
+    elif action_json['action'] == "wait":
+        action_type = "wait"
+        action_inputs = {'time': action_json['time'] if 'time' in action_json else 1}
+
+    actions = []
+    actions.append({
+        "thought": thought,
+        "conclusion": conclusion,
+        "action_type": action_type,
+        "action_inputs": action_inputs,
+        "text": text
+    })
+    return actions
+
+def _load_step_data_owl(trajectory_file_dir, full_trajectory):
+    results = []
+    pattern = re.compile(r'\((\d+),\s*(\d+)')
+    for idx, step in enumerate(full_trajectory):
+        step_num = step['step_num']
+        action_idx = step['action_idx']
+        prediction = step['prediction']
+        parsed_prediction = parse_action_fncall(prediction)
+        
+        action_type = parsed_prediction[0]['action_type']
+        action_inputs = parsed_prediction[0]['action_inputs']
+        thought = parsed_prediction[0]['thought']
+        conclusion = parsed_prediction[0]['conclusion']
+        
+        if idx == 0:
+            screenshot = os.path.join(trajectory_file_dir, 'initial_obs.png')
+        else:
+            prev_step = full_trajectory[idx - 1]
+            screenshot = os.path.join(trajectory_file_dir, prev_step['screenshot_file'])
+        screenshot = Image.open(screenshot)
+        
+
+        if action_type in ['click', 'hover', 'right_single', 'left_double']:
+            x, y = action_inputs['start_box']
+            screenshot = draw_circle(screenshot, x, y, 5, 'red')
+        elif action_type in ['drag']:
+            x1, y1 = action_inputs['start_box']
+            x2, y2 = action_inputs['end_box']
+            screenshot = draw_arrow(screenshot, x1, y1, x2, y2, arrowhead_length=10, arrowhead_angle=30, fill="red", width=5)
+        results.append({
+            "screenshot": screenshot,
+            'thought': thought,
+            'action_type': action_type,
+            'action_inputs': action_inputs,
+            'conclusion': conclusion,
+        })
+    return results
+            
+
 def _load_crmbench_cua(trajectory_file_dir):
     full_trajectory = []
     with open(os.path.join(trajectory_file_dir, 'traj.jsonl'), 'r') as f:
@@ -376,6 +502,8 @@ def _load_crmbench_cua(trajectory_file_dir):
         results = _load_step_data_opencua(trajectory_file_dir, full_trajectory)
     elif 'claudecua' in trajectory_file_dir:
         results = _load_step_data_claudecua(trajectory_file_dir, full_trajectory)
+    elif 'owl' in trajectory_file_dir:
+        results = _load_step_data_owl(trajectory_file_dir, full_trajectory)
     else:
         raise NotImplementedError(f"Trajectory file directory {trajectory_file_dir} is not supported")
     evaluation_result = result['evaluation_result']
@@ -384,6 +512,6 @@ def _load_crmbench_cua(trajectory_file_dir):
         
 
 if __name__ == "__main__":
-    results, evaluation_result = _load_crmbench_cua("../outputs/example/trajectory/admin_012_001/0e783184")
+    results, evaluation_result = _load_crmbench_cua("../outputs/owl7b_zero_shot/trajectory/admin_001_001/e8b34933")
     print(len(results))
     
