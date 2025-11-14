@@ -72,13 +72,18 @@ def split_task_config_pool_into_batches(task_config_pool: List[Dict], args: argp
     if args.data_version == "release":
         admin_033 = [f'admin_033_{i:03d}' for i in range(1, 6)] # each instances are conflicting with each other
         admin_030 = [f'admin_030_{i:03d}' for i in range(1, 6)] # validation rule; runs last
+        sales_001 = [f'sales_001_{i:03d}' for i in range(1, 6)] # sales 001 should run after service 001 batch.
         safe_batch = []
+        sales_001_batch = []
         admin_030_batch = []
         admin_033_batches = []
         for task in task_config_pool:
             if task['task_id'] not in admin_030:
                 if task['task_id'] not in admin_033:
-                    safe_batch.append(task)
+                    if task['task_id'] not in sales_001:
+                        safe_batch.append(task)
+                    else:
+                        sales_001_batch.append(task)
                 else:
                     admin_033_batches.append(task)
             else:
@@ -99,6 +104,7 @@ def split_task_config_pool_into_batches(task_config_pool: List[Dict], args: argp
         all_batches = {
             "safe_batch": [],
             "admin_033_batches": {},
+            "sales_001_batch": sales_001_batch,
             "admin_030_batch": admin_030_batch,
         }
 
@@ -137,6 +143,7 @@ def split_task_config_pool_into_batches(task_config_pool: List[Dict], args: argp
         finalized_batches = [
             all_batches["safe_batch"],
             *list(all_batches["admin_033_batches"].values()),
+            all_batches["sales_001_batch"],
             all_batches["admin_030_batch"]
         ]
         print([len(b) for b in finalized_batches])
