@@ -310,6 +310,8 @@ class MilestoneEvaluator(BasePhase):
     def __fuzzy_match(self, string1, string2):
         if string1 is None or string2 is None:
             return False
+        if type(string1) != str or type(string2) != str:
+            return False
         v1, v2 = self.__sentence_vector(string1), self.__sentence_vector(string2)
         similarity = dot(v1, v2) / (norm(v1) * norm(v2))
         if similarity > 0.8:
