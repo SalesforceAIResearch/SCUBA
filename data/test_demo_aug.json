@@ -7223,7 +7223,7 @@
                 "Contact",
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "Sentence that reveals the company name": "I just met the Leo Luis, the VP from the Old Balance and there's a potential to start a business with this company.",
@@ -7259,7 +7259,7 @@
                 "Contact",
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "Sentence that reveals the company name": "I just met Sarah Kim, the Director of Operations from Next Horizon Technologies, and there's a potential to start a business with this company.",
@@ -7295,7 +7295,7 @@
                 "Contact",
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "Sentence that reveals the company name": "I just met Daniel Ortiz, the SVP of Partnerships from GreenTrail Logistics, and there's a potential to start a business with this company.",
@@ -7331,7 +7331,7 @@
                 "Contact",
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "Sentence that reveals the company name": "I just had a productive call with the procurement team at TechFlow Solutions. They're looking to expand their cloud infrastructure services and seem like a great fit for our enterprise package.",
@@ -7367,7 +7367,7 @@
                 "Contact",
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "Sentence that reveals the company name": "After meeting with the leadership team at Global Manufacturing Corp during yesterday's industry conference, I believe they would be an excellent prospect for our supply chain optimization solutions.",
@@ -7404,7 +7404,7 @@
             "objects": [
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "company_hierarchy_description": "The company LyLyApple opens two new sites in Asia (LyLyPear) and Europe (LyLyCherry).",
@@ -7443,7 +7443,7 @@
             "objects": [
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "company_hierarchy_description": "Both NovaAxis Corp and TerraLink Systems have recently expanded their global footprint. NovaAxis has launched a new division in South Korea (NovaAxis Seoul), while TerraLink has opened a new site in Kenya (TerraLink Nairobi).",
@@ -7480,7 +7480,7 @@
             "objects": [
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "company_hierarchy_description": "CyberLoom Inc. and Vertex Dynamics are expanding in different ways. CyberLoom has launched a new research center in Germany (CyberLoom Berlin), while Vertex Dynamics has not yet opened any new branches.",
@@ -7517,7 +7517,7 @@
             "objects": [
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "company_hierarchy_description": "The company CloudWave Solutions opens two new sites in North America (CloudWave NA) and Australia (CloudWave AU).",
@@ -7554,7 +7554,7 @@
             "objects": [
                 "Account"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "company_hierarchy_description": "MegaCorp Financial acquired two specialized firms: DataSecure Solutions (cybersecurity) and GreenTech Innovations (renewable energy consulting). They want to maintain the acquired companies as separate divisions under the MegaCorp umbrella.",
@@ -7589,7 +7589,7 @@
             "objects": [
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "free_form_sentence_with_lead_description": "I get a new lead source from web. The lead name is John Doe from sForce company. I just contacted him and I would rate his attitude as warm. The industry is Technology."
@@ -7623,7 +7623,7 @@
             "objects": [
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "free_form_sentence_with_lead_description": "I get a new lead source from partner referral. The lead name is Maya Patel from GenePoint company. I just contacted her and I would rate her attitude as hot. The industry is Biotechnology."
@@ -7657,7 +7657,7 @@
             "objects": [
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "free_form_sentence_with_lead_description": "I got a new lead source from Other. The lead name is Kevin Tran from HealthSync Solutions company. I just contacted him and I would rate his attitude as cold. The industry is Healthcare."
@@ -7691,7 +7691,7 @@
             "objects": [
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "free_form_sentence_with_lead_description": "Met an interesting prospect at the trade show yesterday - David Rodriguez from Pinnacle Systems. He mentioned they're evaluating new vendors for their upcoming expansion and seemed very engaged during our conversation."
@@ -7725,7 +7725,7 @@
             "objects": [
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "free_form_sentence_with_lead_description": "Received a cold email inquiry from Marcus Thompson at FutureTech Dynamics. He expressed strong interest in our solutions for their digital transformation project and requested a follow-up call next week."
@@ -7765,7 +7765,7 @@
                 "Account",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Frank Knight",
@@ -7806,7 +7806,7 @@
                 "Account",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Jane Smith",
@@ -7847,7 +7847,7 @@
                 "Account",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Alice Johnson",
@@ -7888,7 +7888,7 @@
                 "Account",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "David Lee",
@@ -7929,7 +7929,7 @@
                 "Account",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Grace King",
@@ -7972,7 +7972,7 @@
                 "Task",
                 "Event"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Cloud Software Deal",
@@ -8016,7 +8016,7 @@
                 "Task",
                 "Event"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Enterprise Software Sale",
@@ -8060,7 +8060,7 @@
                 "Task",
                 "Event"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Product Development",
@@ -8104,7 +8104,7 @@
                 "Task",
                 "Event"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Consulting Service",
@@ -8148,7 +8148,7 @@
                 "Task",
                 "Event"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Security Solutions",
@@ -8622,7 +8622,7 @@
             "objects": [
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "product_name": "ThermalMax Pro",
@@ -8678,7 +8678,7 @@
             "objects": [
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "product_name": "CoolBreeze Elite",
@@ -8734,7 +8734,7 @@
             "objects": [
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "product_name": "Smart Fitness Tracker",
@@ -8790,7 +8790,7 @@
             "objects": [
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "product_name": "Organic Skincare Set",
@@ -8846,7 +8846,7 @@
             "objects": [
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "product_name": "Titanium Pro Laptop",
@@ -8892,7 +8892,7 @@
                 "Order",
                 "Contract"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Knight LLC",
@@ -8936,7 +8936,7 @@
                 "Order",
                 "Contract"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": "{'account_name': 'Lee Services', 'start_date': 'next week': '24', 'order_start_date': 'three weeks after contract start date'}",
         "on_start": null,
@@ -8975,7 +8975,7 @@
                 "Order",
                 "Contract"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Green Solutions",
@@ -9019,7 +9019,7 @@
                 "Order",
                 "Contract"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Tech Giants",
@@ -9063,7 +9063,7 @@
                 "Order",
                 "Contract"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Black Enterprises",
@@ -9468,7 +9468,7 @@
             "objects": [
                 "Campaign"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "campaign_name": "Introduce the new shoes collections",
@@ -9517,7 +9517,7 @@
             "objects": [
                 "Campaign"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "campaign_name": "Autumn Trail Running Launch",
@@ -9568,7 +9568,7 @@
             "objects": [
                 "Campaign"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "campaign_name": "Summer Yoga Webinar Series",
@@ -9618,7 +9618,7 @@
             "objects": [
                 "Campaign"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "campaign_name": "Spring Sale Campaign",
@@ -9668,7 +9668,7 @@
             "objects": [
                 "Campaign"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "campaign_name": "Summer Tech Innovation Showcase",
@@ -9732,7 +9732,7 @@
                 "VoiceCallTranscript__c",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Ali Hussein"
@@ -9791,7 +9791,7 @@
                 "VoiceCallTranscript__c",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Raj Patel"
@@ -9850,7 +9850,7 @@
                 "VoiceCallTranscript__c",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Wei Chen"
@@ -9909,7 +9909,7 @@
                 "VoiceCallTranscript__c",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Liam Chen"
@@ -9968,7 +9968,7 @@
                 "VoiceCallTranscript__c",
                 "Lead"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "lead_name": "Fatima Al-Mansouri"
@@ -10006,7 +10006,7 @@
                 "Task",
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "QuantumLeap Integration Opportunity"
@@ -10044,7 +10044,7 @@
                 "Task",
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Quantum Dynamics EDA Integration"
@@ -10082,7 +10082,7 @@
                 "Task",
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "Innovative EDA Partnership with FutureTech"
@@ -10120,7 +10120,7 @@
                 "Task",
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "EcoEnergy Solutions - Advanced EDA Integration"
@@ -10158,7 +10158,7 @@
                 "Task",
                 "Opportunity"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "opportunity_name": "DigitalWave-TechPulse Strategic Partnership"
@@ -11036,7 +11036,7 @@
             "objects": [
                 "Case"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "case_context_setup": "Please create a case record for David Kim about a hardware malfunction. The case status should be 'Escalated' and the case originated from a phone call. Set the priority to High, type to 'Mechanical', case reasoning to 'Equipment Design', subject to 'Hardware Malfunction - Warranty Replacement'."
@@ -11081,7 +11081,7 @@
             "objects": [
                 "Case"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "case_context_setup": "We need to create a case record for Ronny Chen regarding his software licensing issue. The case status should be 'New' and the case originated from a web form submission. Set the priority to Medium, type to 'Electronic', case reasoning to 'Performance', subject to 'Software License Key Activation Required'."
@@ -11126,7 +11126,7 @@
             "objects": [
                 "Case"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "case_context_setup": "We need to create a case record for Alice Bob regarding her account access issue. The case status should be 'Working' and the case originated from an email. Set the priority to High, type to 'Other', case reasoning to 'Equipment Design', subject to 'Account Access Denied - Password Reset Required'."
@@ -11171,7 +11171,7 @@
             "objects": [
                 "Case"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "case_context_setup": "Please create a case record for Ethan Parker about a network connectivity problem. The case status should be 'New' and the case originated from a phone call. Set the priority to Medium, type to 'Electrical', case reasoning to 'Installation', subject to 'Network Connectivity Issues - Router Configuration'."
@@ -11216,7 +11216,7 @@
             "objects": [
                 "Case"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "case_context_setup": "We need to create a case record for Emily Johnson regarding her system performance issue. The case status should be 'Working' and the case originated from a web form submission. Set the priority to Low, type to 'Structural', case reasoning to 'Feedback', subject to 'System Performance Degradation - Memory Upgrade Needed'."
@@ -11500,7 +11500,7 @@
             "objects": [
                 "Entitlement"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Old Balance",
@@ -11546,7 +11546,7 @@
             "objects": [
                 "Entitlement"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Greentrail Logistics",
@@ -11592,7 +11592,7 @@
             "objects": [
                 "Entitlement"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Next Horizon Technologies",
@@ -11638,7 +11638,7 @@
             "objects": [
                 "Entitlement"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "White Industries",
@@ -11684,7 +11684,7 @@
             "objects": [
                 "Entitlement"
             ],
-            "metadata_types": []
+            "metadata_types": ["ValidationRule"]
         },
         "instance_dict": {
             "account_name": "Innovate Ltd",
