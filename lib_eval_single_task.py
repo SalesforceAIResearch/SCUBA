@@ -752,13 +752,12 @@ def agent_loop_owl(
             if done:
                 break
         step_idx += 1
-    # extract the value of the finished(content=...)
-    match = re.search(r"finished\s*\(\s*content\s*=\s*['\"](.*?)['\"]\s*\)", prediction)
-    if match:
-        answer = match.group(1)
-    else:
-        answer = 'no value found in finished(content=...)'
-    this_task_logger.info(f"Value parsed from the prediction (if the agent issues finished(content=...)): {answer}")
+    answer = 'no value found in prediction'
+    if "<thinking>" in prediction and "</thinking>" in prediction:
+        answer = prediction.split("<thinking>")[-1].split("</thinking>")[0]
+    elif "<thinking>" in prediction:
+        answer = prediction.split("<thinking>")[1]
+    this_task_logger.info(f"Value parsed from the prediction (thinking section): {answer}")
     with portalocker.Lock(str(LOCK_PATH), flags=portalocker.LOCK_EX):
         this_task_logger.info(f"Applying lock for environment evaluation for task {task_id}...\n")
         result = env.evaluate(task_config, answer)
