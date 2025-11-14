@@ -91,11 +91,11 @@ class Resetter(BasePhase):
             self.objects.append('UserRole')
         for object in self.objects:
             if object == 'Queue':
-                query = f'SELECT FIELDS(ALL) FROM Group WHERE Type = \'{object}\' AND SystemModstamp >= LAST_N_DAYS:30 LIMIT 200'
+                query = f'SELECT FIELDS(ALL) FROM Group WHERE Type = \'{object}\' AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\' LIMIT 200'
             elif object == 'UserLogin':
                 query = f'SELECT Id, IsFrozen, UserId FROM {object}'
             else:
-                query = f'SELECT FIELDS(ALL) FROM {object} WHERE SystemModstamp >= LAST_N_DAYS:30 LIMIT 200'
+                query = f'SELECT FIELDS(ALL) FROM {object} WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\' LIMIT 200'
             try:
                 run_query(query, object, self.org_alias)
             except Exception as e:
@@ -174,7 +174,7 @@ class Resetter(BasePhase):
 
         for type in self.metadata_types:
             if type in ['ListView', 'MatchingRule']:
-                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE SystemModstamp >= LAST_N_DAYS:20 AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
+                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
@@ -193,7 +193,7 @@ class Resetter(BasePhase):
             elif type == 'ValidationRule':
                 self.__reset_validation_rule()
             elif type in ['AssignmentRules']:
-                query = f'SELECT Id, SObjectType, Name FROM AssignmentRule  WHERE SystemModstamp >= LAST_N_DAYS:20 AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
+                query = f'SELECT Id, SObjectType, Name FROM AssignmentRule  WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
@@ -210,7 +210,7 @@ class Resetter(BasePhase):
                 except (EmptyDataError, Exception) as exc:
                     continue
             elif type in ['Report']:
-                query = f'SELECT Id FROM Report WHERE SystemModstamp >= LAST_N_DAYS:10'
+                query = f'SELECT Id FROM Report WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
