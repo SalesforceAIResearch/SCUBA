@@ -24,5 +24,7 @@ gradio/.gradio/certificate.pem
 data/auth_state_cua.json
 data/auth_state_bu.json
 outputs/*
-scuba/prerequisites/data/bulk_data/PricebookEntry.json
 analysis/sys_failed_evaluator.log
+data/auth_state_cua_vm_3.json
+.gitignore
+data/auth_state_cua_vm2_ydbackup.json

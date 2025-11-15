@@ -36,10 +36,10 @@ ORG_ALIAS=YDCRMGUI
 
 
 # full run
-query_instance_file=data/test_zero_shot.json
-run_name=mobileagentv3_zero_shot
-# query_instance_file=data/test_demo_aug.json
-# run_name=mobileagentv3_demo_aug
+# query_instance_file=data/test_zero_shot.json
+# run_name=mobileagentv3_zero_shot
+query_instance_file=data/test_demo_aug.json
+run_name=mobileagentv3_demo_aug
 
 # python main_cua.py \
 #     --storage_state_file_path data/auth_state_cua.json \
@@ -58,7 +58,8 @@ run_name=mobileagentv3_zero_shot
 #     --n_eval 1 \
 #     --temperature 1.0 \
 #     --vllm_client_port_start 2025 \
-#     --reset_orgs_before_eval 
+#     --reset_orgs_before_eval \
+#     --skip_template_without_memory
 
 # rerun failed tasks
 python main_cua.py \
@@ -67,7 +68,7 @@ python main_cua.py \
     --data_version $DATA_VERSION \
     --org_alias $ORG_ALIAS \
     --vllm_client_replicas 8 \
-    --total_desired_envs 3 \
+    --total_desired_envs 16 \
     --sleep_after_execution 5 \
     --docker_provider_host_list $DOCKER_PROVIDER_HOST \
     --result_dir outputs \
@@ -79,5 +80,6 @@ python main_cua.py \
     --temperature 1.0 \
     --vllm_client_port_start 2025 \
     --reset_orgs_before_eval \
-    --rerun_failed_tasks
+    --rerun_failed_tasks \
+    --skip_template_without_memory
 
