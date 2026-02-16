@@ -61,7 +61,7 @@
                     "\"100,000\""
                 ]
             ],
-            "field_name": "Amount"
+            "field_name": "AMOUNT"
         },
         "difficulty": "medium",
         "query_template_name": "create_report",
@@ -96,7 +96,7 @@
         "human_review_comment": "rejected since it is the same. Rewriten",
         "ground_truth_dict": {
             "object_name": "Accounts",
-            "report_name": "ActiveAccountsRPT",
+            "report_name": "MyAccountsRPT",
             "filter_type": "standard filter",
             "filters": [
                 [
@@ -527,7 +527,7 @@
             "operator2": "equals",
             "value2": "Closed Lost",
             "field3": "AMOUNT",
-            "operator3": "greaterThan",
+            "operator3": "greaterOrEqual",
             "value3": "\"5,000\"",
             "field4": "TYPE",
             "operator4": "equals",
@@ -8185,6 +8185,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8227,6 +8229,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8269,6 +8273,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8311,6 +8317,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -8353,6 +8361,8 @@
                 }
             },
             "objects": [
+                "Quote",
+                "Opportunity",
                 "PricebookEntry",
                 "Pricebook2"
             ],
@@ -10243,7 +10253,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "Shoe Case Support",
@@ -10290,7 +10300,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "VIP Support",
@@ -10337,7 +10347,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "Marketing Support",
@@ -10383,7 +10393,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "tech support specialists",
@@ -10430,7 +10440,7 @@
                 "QueueSobject",
                 "Queue"
             ],
-            "metadata_types": []
+            "metadata_types": ["AssignmentRules"]
         },
         "instance_dict": {
             "queue_name": "enterprise client support",

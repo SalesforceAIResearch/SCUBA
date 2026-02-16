@@ -17,11 +17,10 @@ import traceback
 import glob
 from playwright.async_api import async_playwright
 
-from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches
+from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches, capture_logs_to_file
 from args import get_args
 
 from scuba.phases.evaluation.master_evaluator import MilestoneEvaluator
-from scuba.phases.resetter import Resetter
 from scuba.helpers.salesforce_commands import authorize_using_access_token, install_initial_data, retrieve_initial_state_metadata, create_project_if_not_exists
 # build env and agent
 from browser_use import Controller
@@ -203,7 +202,7 @@ async def aevaluate_single_task_bu(
         
         async with asyncio.Lock():
             try:
-                evaluator = MilestoneEvaluator(args.org_alias)
+
                 # breakpoint()
                 score_card = evaluator.evaluate_instance(task_instance_dict, agent_answer)
                 evaluation_result = score_card.__dict__()
@@ -339,13 +338,7 @@ async def test(args: argparse.Namespace, task_config_pool: List[Dict]) -> None:
         total_batches = len(task_config_pool_batches)
         logger.info(f"Split the task_config_pool into {total_batches} batches due to constraints and dependencies of different tasks")
         
-        if args.reset_orgs_before_eval:
-            # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
-            logger.info(f"Bulk resetting the salesforce orgs...")
-            time_start = time.perf_counter()
-            run_reset(task_config_pool, args.org_alias)
-            time_end = time.perf_counter()
-            logger.info(f"Done bulk resetting the salesforce orgs in {time_end - time_start:.2f} seconds")
+
         if args.solutions == 'bu':
             # build auxilary components
             retriever = None
@@ -374,6 +367,15 @@ async def test(args: argparse.Namespace, task_config_pool: List[Dict]) -> None:
         for batch_idx, task_config_pool in enumerate(task_config_pool_batches):
             num_tasks = len(task_config_pool)
             logger.info(f"Starting batch {batch_idx} with {num_tasks} tasks")
+            # Since the reset and evaluation are based on local files; we need to reset the salesforce orgs first
+            logger.info(f"Bulk resetting the salesforce orgs...")
+            time_start=time.perf_counter()
+            file=os.path.join(args.result_dir,"reset.log")
+            with capture_logs_to_file(file):
+                run_reset(task_config_pool, args.org_alias)
+
+            time_end=time.perf_counter()
+            logger.info(f"Done bulk resetting the salesforce orgs in {time_end-time_start:.2f} seconds")
             semaphore = asyncio.Semaphore(args.max_concurrent_tasks)
             job_queue = []
             for task_instance_dict in task_config_pool:
@@ -410,6 +412,7 @@ def get_unfinished_task_ids(task_instance_dicts: List[Dict], target_dir: str):
 if __name__ == '__main__':
     args = get_args()
     assert args.org_alias == os.getenv("ORG_ALIAS"), f"org_alias: {args.org_alias} is not the same as the org_alias in the .env file: {os.getenv('ORG_ALIAS')}. The one in the .env file is used to login in the remote desktop environment."
+    evaluator=MilestoneEvaluator(args.org_alias)
     args.result_dir = os.path.join(args.result_dir, args.run_name)
     
     assert args.total_desired_envs == args.max_concurrent_tasks, f"total_desired_envs: {args.total_desired_envs} is not the same as max_concurrent_tasks: {args.max_concurrent_tasks}"
