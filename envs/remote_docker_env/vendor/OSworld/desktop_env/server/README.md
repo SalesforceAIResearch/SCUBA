@@ -369,18 +369,8 @@ sudo systemctl start osworld_server.service
 
 ### Accessibility Tree Support
 
-To support the accessibility tree functionality, you'll need to install pyastpi2 in your Ubuntu environment. This package enables access to accessibility information and tree structures.
+Due to Salesforce security requirements, we’re unable to provide the solution here. Please refer to the instructions in the original repository and proceed at your own discretion.
 
-Installation steps:
-
-```bash
-# Update package list and ensure pip is installed
-sudo apt-get update
-sudo apt-get install python3-pip
-
-# Install pyastpi2 using pip
-pip3 install pyastpi2
-```
 
 ### Xorg Configuration
 
