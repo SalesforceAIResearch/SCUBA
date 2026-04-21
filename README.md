@@ -23,6 +23,7 @@
 
 ## 📢 Updates
 
+- [2026-04-21] The way to bypass the MFA is by passsed. Please refer to the [tutorial 1](./tutorials/get_consumer_key_secrete.md) to grant more permissions to the external client app. This should address the issue of the MFA prompt during the evaluation.
 - [2025-09-30] SCUBA paper is now available on [arXiv](https://arxiv.org/abs/2509.26506)!
 
 
@@ -160,6 +161,11 @@ bash examples/bu_claude4_zero_shot.sh
 If you want to observe the agent run, you can remove the `--headless` flag in the `examples/bu_claude4_zero_shot.sh` file.
 
 After the run, you should expect to see the outputs in the `outputs` directory. We provide sample outputs in the `examples/sample_outputs/demo_bu_claude4`. 
+
+If you want to test on a small subset of the tasks, a sample command is shown below (running in the headless mode)
+```bash
+python main_bu.py --query_instance_file ./data/test_zero_shot.json --data_version release --solutions bu --org_alias <Your Org Alias> --max_steps 10 --result_dir outputs --run_name smoke_test --use_planner --max_concurrent_tasks 5 --total_desired_envs 5  --provider openai --reset_orgs_before_eval --test_parallel_run --test --headless
+```
 
 ## 🤖 Evaluate the computer-use agents
 

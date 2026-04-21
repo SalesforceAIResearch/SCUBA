@@ -51,6 +51,7 @@ async def launch_and_login(
     )
     context = BrowserContextBugFix(browser=browser, config=context_config)
 
+    success = False
     try:
         session = await context.get_session()
         page = session.current_page
@@ -68,7 +69,7 @@ async def launch_and_login(
 
         if "login.salesforce.com" in url or "Login" in title:
             print(f"[Instance {instance_id}] FAILED: still on login page after frontdoor")
-            return False
+            return success, browser, context
 
         if "lightning" not in url:
             await page.goto(f"{instance_url}/lightning/page/home")
@@ -90,16 +91,30 @@ async def launch_and_login(
         final_url = page.url
         final_title = await page.title()
         print(f"[Instance {instance_id}] SUCCESS — title: '{final_title}', url: {final_url}")
-        return True
+        success = True
 
     except Exception as e:
         print(f"[Instance {instance_id}] FAILED: {e}")
         traceback.print_exc()
-        return False
-    finally:
-        if headless:
+
+    if headless:
+        await _close_quietly(context, browser, instance_id)
+        return success, None, None
+
+    return success, browser, context
+
+
+async def _close_quietly(context, browser, instance_id: int):
+    try:
+        if context is not None:
             await context.close()
+    except Exception as e:
+        print(f"[Instance {instance_id}] Error closing context: {e}")
+    try:
+        if browser is not None:
             await browser.close()
+    except Exception as e:
+        print(f"[Instance {instance_id}] Error closing browser: {e}")
 
 
 async def main():
@@ -131,12 +146,31 @@ async def main():
         launch_and_login(i, oauth, args.headless, args.viewport_width, args.viewport_height)
         for i in range(args.num_instances)
     ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    raw_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    if not args.headless:
-        input("\nAll browsers launched. Press Enter to close them all...")
+    successes = 0
+    open_browsers: list[tuple[int, object, object]] = []
+    for i, r in enumerate(raw_results):
+        if isinstance(r, BaseException):
+            print(f"[Instance {i}] FAILED with exception: {r}")
+            continue
+        success, browser, context = r
+        if success:
+            successes += 1
+        if browser is not None or context is not None:
+            open_browsers.append((i, browser, context))
 
-    successes = sum(1 for r in results if r is True)
+    if not args.headless and open_browsers:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(
+            None, input, "\nAll browsers launched. Press Enter to close them all..."
+        )
+        print("Closing browsers...")
+        await asyncio.gather(
+            *(_close_quietly(ctx, br, i) for (i, br, ctx) in open_browsers),
+            return_exceptions=True,
+        )
+
     failures = args.num_instances - successes
     print(f"\nResults: {successes}/{args.num_instances} succeeded, {failures} failed")
 

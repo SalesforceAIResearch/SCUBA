@@ -23,4 +23,6 @@ gradio/.gradio/certificate.pem
 
 data/auth_state_cua.json
 data/auth_state_bu.json
+data/oauth_refresh_token.json
 outputs/*
+
