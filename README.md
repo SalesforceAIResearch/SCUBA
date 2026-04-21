@@ -94,11 +94,20 @@ Add your org information to `orgs/orgs_info.json` by 1) copying the `orgs/orgs_i
 
 **To test if the org information is added correctly, you can run `python tests/test_add_new_org.py`. It will print `Login successful for the org: {ORG_ALIAS}` if the org information is added correctly.**
 
+## 🔑 Salesforce login (OAuth Authorization Code flow)
 
-## By-pass two-way authentication
-Please refer to the [tutorial](tutorials/bypass_mfa.md) to bypass the two-way authentication.
+SCUBA uses the OAuth Authorization Code flow to log into Salesforce. This avoids MFA prompts during evaluation runs. The flow works as follows:
 
+1. **First run (one-time, interactive):** When you run any evaluation script for the first time, a browser window opens automatically. Log in to Salesforce and click **Allow**. The script saves a refresh token to `data/oauth_refresh_token.json`.
+2. **Subsequent runs (fully automated):** The saved refresh token is used to silently obtain access tokens and single-use frontdoor URLs via `/services/oauth2/singleaccess`. No browser interaction or MFA is required.
+3. **Token expiry:** If the refresh token is ever revoked or expires, the interactive flow is triggered again automatically.
 
+You can verify the login flow independently with the test script:
+
+```bash
+python scripts/test_frontdoor_login.py --org_alias <your-org-alias>
+python scripts/test_frontdoor_login.py --org_alias <your-org-alias> --num_instances 3 --headless
+```
 
 ## 🖥️ Desktop Environment Setup (Optional)
 
@@ -122,7 +131,7 @@ ANONYMIZED_TELEMETRY=false
 # Salesforce environment variables
 ORG_ALIAS=<your-org-alias>
 SALESFORCE_USERNAME=<your-salesforce-username>
-SALESFORCE_PASSWORD=<your-salesforce-password>
+
 # Docker environment variables (only if you host the desktop environment on the GCP server)
 DOCKER_PROVIDER_HOST=<your-server-ip>
 DOCKER_PROVIDER_PORT=<your-server-port>
@@ -135,11 +144,13 @@ DOCKER_PROVIDER_PORT=<your-server-port>
 
 ## 🌐 Evaluate the browser-use agents
 
-Before evaluating the browser-use agents, you need to make sure that the you can successfully log in to Salesforce. Please run
-```python
-python scripts/manual_login_to_sf.py --mode bu
+Before evaluating the browser-use agents, verify that the OAuth login flow works by running:
+
+```bash
+python scripts/test_frontdoor_login.py --org_alias <your-org-alias>
 ```
-It will log in to Salesforce. If you are blocked by the two-way authentication, please refer to the [FAQs](#two-way-authentication-issue) section.
+
+On first run, a browser opens for you to log in and click Allow (one-time). After that, all subsequent runs are fully automated.
 
 After confirming that you can successfully log in to Salesforce, you can start evaluating the browser-use agents.
 Make a copy of the `examples/bu_claude4_zero_shot.sh.example` file and rename it as `examples/bu_claude4_zero_shot.sh`. Replace the placeholder values with your own. Then run
@@ -273,7 +284,9 @@ Computer-use trajectory viewer:
 # ❓FAQs
 
 ## Two-way authentication issue
-Please refer to the [tutorial](tutorials/bypass_mfa.md) to bypass the two-way authentication. If this does not work, pleaes raise an issue.
+SCUBA now uses the OAuth Authorization Code flow, which handles MFA automatically after a one-time interactive login. See [Salesforce login](#-salesforce-login-oauth-authorization-code-flow) above.
+
+If you encounter issues with the OAuth flow, ensure your Connected App has the correct scopes and callback URL configured (see [Connected App settings](#additional-connected-app-settings-for-oauth-authorization-code-flow)). If this does not work, please raise an issue.
 
 
 

@@ -18,6 +18,7 @@ import shutil
 
 
 from scuba.helpers.salesforce_commands import authorize_using_access_token, install_initial_data, retrieve_initial_state_metadata, create_project_if_not_exists
+from scuba.helpers.sf_oauth import refresh_access_token
 from envs.remote_docker_env import RemoteDesktopEnv, ContainerConfig, ProviderConfig
 from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches
 from args import get_args
@@ -181,6 +182,10 @@ def test(
     ):
     try:
         logger.info(f"Starting evaluation on data version: {args.data_version}")
+        # Ensure we have a valid OAuth token (prompts interactive login on first run)
+        logger.info("Verifying OAuth access token (may open browser for one-time authorization)...")
+        refresh_access_token(args.org_alias)
+
         authorize_using_access_token(args.org_alias)
         retrieve_initial_state_metadata(args.org_alias)
         install_initial_data(args.org_alias, task_config_pool)

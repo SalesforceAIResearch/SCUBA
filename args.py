@@ -31,7 +31,7 @@ def get_args():
     parser.add_argument("--viewport_height", type=int, default=1080)
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--browser_full_screen", action="store_true")
-    parser.add_argument("--storage_state_file_path", type=str, required=True, help="Path to the storage state file.")
+    parser.add_argument("--storage_state_file_path", type=str, default=None, help="Path to the storage state file (optional, used as fallback for legacy login).")
     # timeout setup
     parser.add_argument("--env_reset_timeout", type=int, default=300)
     parser.add_argument("--task_timeout", type=int, default=5400, help="each task is allowed to run for no more than this many seconds")
@@ -76,6 +76,9 @@ def get_args():
     parser.add_argument("--provider", type=str, default="openai", choices=["openai", "claude", "google", "vertex"])
     
     
+    # quick test with a small set of tasks
+    parser.add_argument("--test", action="store_true", help="Run only a small predefined set of 5 tasks for quick validation.")
+
     # debug configs
     parser.add_argument("--run_as_debug_mode", action="store_true")
     parser.add_argument("--debug_task_id_list", nargs="+", help="Task index to evaluate.")
