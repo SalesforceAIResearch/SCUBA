@@ -23,6 +23,7 @@ from args import get_args
 from scuba.phases.evaluation.master_evaluator import MilestoneEvaluator
 from scuba.phases.resetter import Resetter
 from scuba.helpers.salesforce_commands import authorize_using_access_token, install_initial_data, retrieve_initial_state_metadata, create_project_if_not_exists
+from scuba.helpers.sf_oauth import refresh_access_token, get_frontdoor_url
 # build env and agent
 from browser_use import Controller
 from browser_use.controller.views import NoParamsAction
@@ -35,7 +36,7 @@ from browser_use.custom.browser_context_zoo import BrowserContextBugFix
 
 from browser_use.custom.agent_zoo import AgentWithCustomPlanner
 from browser_use.custom.trajectory_parser import agent_trajectory_parser
-from browser_use.custom.utils import create_llm, summarize_usage_info_from_jsonfied_trajectory, LoginInCredentials
+from browser_use.custom.utils import create_llm, summarize_usage_info_from_jsonfied_trajectory
 
 
 
@@ -122,60 +123,40 @@ async def aevaluate_single_task_bu(
             minimum_wait_page_load_time = 0.5,
             browser_window_size={'width': args.viewport_width, 'height': args.viewport_height},
         )
-        context = BrowserContextBugFix(browser=browser, 
-                                       config=context_config,
-                                       storage_state_file_path=args.storage_state_file_path
-                                       )
+        context = BrowserContextBugFix(browser=browser, config=context_config)
         retrieved_narrative_memory = []
-        # add custom actions
-        credentials = LoginInCredentials(username=os.environ.get("SALESFORCE_USERNAME",""), 
-                                    password=os.environ.get("SALESFORCE_PASSWORD", ""))
-        assert credentials.username != "", "Please set the environment variable SALESFORCE_USERNAME"
-        assert credentials.password != "", "Please set the environment variable SALESFORCE_PASSWORD"
-        
-        controller = Controller(exclude_actions=['search_google'])
-        @controller.action('Login to Salesforce website', param_model=LoginInCredentials)
-        async def login_salesforce(params: LoginInCredentials, browser: BrowserContextBugFix) -> ActionResult:
-            page = await browser.get_current_page()
-            await page.goto("https://login.salesforce.com")
-            await page.get_by_label("Username").click()
-            await page.get_by_label("Username").fill(params.username)
-            await page.get_by_label("Password").click()
-            await page.get_by_label("Password").fill(params.password)
-            await page.get_by_role("button", name="Log In").click()
-            # logger.info(f"Waiting for {PAUSE_AFTER_LOGIN} seconds after clicking login button since salesforce can be slow to load...")
-            await asyncio.sleep(PAUSE_AFTER_LOGIN)
-            action_result = ActionResult(extracted_content="Salesfoce Login successful.")
-            # await asyncio.sleep(60)
 
-            # if we are in the lightning UI (since the agent might swicth to the classic UI in some runs)
+        controller = Controller(exclude_actions=['search_google'])
+        @controller.action('Login to Salesforce website via frontdoor URL', param_model=NoParamsAction)
+        async def login_salesforce(param_model: NoParamsAction, browser: BrowserContextBugFix) -> ActionResult:
+            page = await browser.get_current_page()
+            oauth = refresh_access_token(args.org_alias)
+            frontdoor_url = get_frontdoor_url(oauth["access_token"], oauth["instance_url"])
+            await page.goto(frontdoor_url, wait_until="domcontentloaded")
+            await asyncio.sleep(PAUSE_AFTER_LOGIN)
+
             url = page.url
             if "lightning" not in url:
-                new_url = url.split('.')[:2]
-                new_url = '.'.join(new_url)
-                new_url = f"{new_url}.lightning.force.com/lightning/page/home"
-                await page.goto(new_url)
+                instance_url = oauth["instance_url"].rstrip("/")
+                await page.goto(f"{instance_url}/lightning/page/home")
                 await asyncio.sleep(PAUSE_AFTER_LOGIN)
 
-            # navigate to sales app
             await page.get_by_role("button", name="App Launcher").click()
             try:
                 await page.get_by_placeholder("Search apps and items...").fill("sales")
                 await page.get_by_role("option", name="Sales", exact=True).click()
-                action_result = ActionResult(extracted_content="Salesfoce Login successful")
+                action_result = ActionResult(extracted_content="Salesforce Login successful")
             except TimeoutError as e:
-                action_result = ActionResult(extracted_content="Salesfoce Login; failed to navigate to sales app")
-                # for orgs does not have sales app, we use digital experiences as a fallback
+                action_result = ActionResult(extracted_content="Salesforce Login; failed to navigate to sales app")
                 try:
                     await page.get_by_placeholder("Search apps and items...").fill("Salesforce Chatter")
                     await page.get_by_role("option", name="Salesforce Chatter", exact=True).click()
                 except TimeoutError as e:
-                    # we just do nothing here
                     logger.warning(f"{str(e)}.\n Skip the initialization.")
                     pass
             return action_result
 
-        initial_actions = [{'login_salesforce': {"username": credentials.username, "password": credentials.password}}]
+        initial_actions = [{'login_salesforce': {}}]
         
         
         @controller.action("Call external planner agent to revise the current plan. This action should be called when the browser agent feels getting stuck in a loop, cannot recover from the error, or is unable to make progress.", param_model=NoParamsAction)
@@ -330,6 +311,10 @@ async def test(args: argparse.Namespace, task_config_pool: List[Dict]) -> None:
         logger.info("No tasks to evaluate.")
         return
     try:
+        # Ensure we have a valid OAuth token (prompts interactive login on first run)
+        logger.info("Verifying OAuth access token (may open browser for one-time authorization)...")
+        refresh_access_token(args.org_alias)
+
         authorize_using_access_token(args.org_alias)
         retrieve_initial_state_metadata(args.org_alias)
         install_initial_data(args.org_alias, task_config_pool)
@@ -433,9 +418,15 @@ if __name__ == '__main__':
     with open(args.query_instance_file, "r") as f:
         task_instance_dicts = json.load(f)
         
+    TEST_TASK_IDS = ["admin_025_001", "admin_010_001", "admin_026_001", "service_004_001", "sales_004_001"]
+
     # set up task config pool
     if not args.rerun_failed_tasks:
-        if args.run_as_debug_mode:
+        if args.test:
+            target_task_ids = TEST_TASK_IDS
+            tasks_to_eval = [t for t in task_instance_dicts if str(t["task_id"]) in target_task_ids]
+            logger.info(f"Test mode: evaluating {len(tasks_to_eval)} tasks: {target_task_ids}")
+        elif args.run_as_debug_mode:
             target_task_ids = args.debug_task_id_list
             # target_task_ids = []
             # for task_instance in task_instance_dicts:

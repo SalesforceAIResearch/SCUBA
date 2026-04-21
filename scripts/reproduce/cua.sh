@@ -21,7 +21,6 @@ QUERY_INSTANCE_FILE=data/test_zero_shot.json
 python main_cua.py \
     --query_instance_file $QUERY_INSTANCE_FILE \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_cua.json \
     --org_alias $ORG_ALIAS \
     --vllm_client_replicas 8 \
     --total_desired_envs 40 \
@@ -42,7 +41,6 @@ python main_cua.py \
 python main_cua.py \
     --query_instance_file $QUERY_INSTANCE_FILE \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_cua.json \
     --org_alias $ORG_ALIAS \
     --service_provider ray \
     --total_desired_envs 40 \
@@ -65,7 +63,6 @@ python main_cua.py \
 python main_cua.py \
     --query_instance_file $QUERY_INSTANCE_FILE \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_cua.json \
     --org_alias $ORG_ALIAS \
     --service_provider api \
     --total_desired_envs 3 \
@@ -84,7 +81,6 @@ python main_cua.py \
 python main_cua.py \
     --query_instance_file $QUERY_INSTANCE_FILE \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_cua.json \
     --org_alias $ORG_ALIAS \
     --service_provider api \
     --total_desired_envs 10 \
@@ -105,7 +101,6 @@ python main_cua.py \
 python main_cua.py \
     --query_instance_file $QUERY_INSTANCE_FILE \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_cua.json \
     --org_alias $ORG_ALIAS \
     --service_provider vllm+api \
     --vllm_client_replicas 8 \

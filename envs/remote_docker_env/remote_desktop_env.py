@@ -8,6 +8,8 @@ import time
 import json
 dotenv.load_dotenv(override=True)
 
+from scuba.helpers.sf_oauth import refresh_access_token, get_frontdoor_url
+
 # Add OSworld to Python path for absolute imports
 osworld_path = os.path.join(os.path.dirname(__file__), 'vendor', 'OSworld')
 if osworld_path not in sys.path:
@@ -300,64 +302,68 @@ class RemoteDesktopEnv(DesktopEnv):
                 raise Exception("Failed to connect to browser")
 
             context = browser.contexts[0]
-            if self.storage_state:
-                if 'cookies' in  self.storage_state and  self.storage_state['cookies']:
-                    try:
-                        context.add_cookies( self.storage_state['cookies'])
-                        logger.debug(f"Applied {len( self.storage_state['cookies'])} cookies from storage state")
-                    except Exception as cookie_error:
-                        logger.warning(f"Could not apply cookies: {cookie_error}")
-            
-                # Note: localStorage/sessionStorage need to be set at page level after navigation
-                if 'origins' in  self.storage_state:
-                    self._pending_storage_origins =  self.storage_state['origins']
-                    logger.debug("Storage origins data will be applied after page navigation")
-                
             page = context.new_page()
-            page.goto("https://login.salesforce.com/")
-            self._apply_page_storage(page)
-            page.get_by_label("Username").click()
-            page.get_by_label("Username").fill(os.getenv("SALESFORCE_USERNAME"))
-            page.get_by_label("Password").click()
-            page.get_by_label("Password").fill(os.getenv("SALESFORCE_PASSWORD"))
-            page.get_by_role("button", name="Log In").click()
-            logger.info(f"Waiting for {pause_after_login} seconds after clicking login button to since salesforce can be slow to load...")
-            time.sleep(pause_after_login)
-            # Wait for login to complete - don't wait for networkidle as Salesforce has continuous background activity
-            
-            # if we are in the lightning UI (since the agent might swicth to the classic UI in some runs)
+
+            org_alias = getattr(self, 'org_alias', None)
+            if org_alias:
+                oauth = refresh_access_token(org_alias)
+                frontdoor_url = get_frontdoor_url(oauth["access_token"], oauth["instance_url"])
+                logger.info("Logging into Salesforce via frontdoor URL (no MFA)...")
+                page.goto(frontdoor_url, wait_until="domcontentloaded")
+                time.sleep(pause_after_login)
+                instance_url = oauth["instance_url"].rstrip("/")
+            else:
+                if self.storage_state:
+                    if 'cookies' in self.storage_state and self.storage_state['cookies']:
+                        try:
+                            context.add_cookies(self.storage_state['cookies'])
+                            logger.debug(f"Applied {len(self.storage_state['cookies'])} cookies from storage state")
+                        except Exception as cookie_error:
+                            logger.warning(f"Could not apply cookies: {cookie_error}")
+                    if 'origins' in self.storage_state:
+                        self._pending_storage_origins = self.storage_state['origins']
+                        logger.debug("Storage origins data will be applied after page navigation")
+
+                page.goto("https://login.salesforce.com/")
+                self._apply_page_storage(page)
+                page.get_by_label("Username").click()
+                page.get_by_label("Username").fill(os.getenv("SALESFORCE_USERNAME"))
+                page.get_by_label("Password").click()
+                page.get_by_label("Password").fill(os.getenv("SALESFORCE_PASSWORD"))
+                page.get_by_role("button", name="Log In").click()
+                logger.info(f"Waiting for {pause_after_login} seconds after clicking login button...")
+                time.sleep(pause_after_login)
+                instance_url = None
+
             url = page.url
             if "lightning" not in url:
-                new_url = url.split('.')[:2]
-                new_url = '.'.join(new_url)
-                new_url = f"{new_url}.lightning.force.com/lightning/page/home"
+                if instance_url:
+                    new_url = f"{instance_url}/lightning/page/home"
+                else:
+                    new_url = url.split('.')[:2]
+                    new_url = '.'.join(new_url)
+                    new_url = f"{new_url}.lightning.force.com/lightning/page/home"
                 page.goto(new_url)
                 time.sleep(pause_after_login)
             try:
-                # Wait for the app launcher to load (this indicates successful login)
-                # page.locator("div.slds-icon-waffle").wait_for(timeout=50000)
                 page.get_by_role("button", name="App Launcher").wait_for(timeout=50000)
                 logger.info("Successfully logged into Salesforce")
             except Exception as e:
                 logger.warning(f"Warning: Salesforce login timeout or error: {e}")
                 logger.warning("Continuing with hard sleep for 5 seconds")
                 time.sleep(5)
-            # navigate to sales app
             page.get_by_role("button", name="App Launcher").click()
             try:
                 page.get_by_placeholder("Search apps and items...").fill("sales")
                 page.get_by_role("option", name="Sales", exact=True).click()
             except TimeoutError as e:
-                # for orgs does not have sales app, we use digital experiences as a fallback
                 try:
                     page.get_by_placeholder("Search apps and items...").fill("Salesforce Chatter")
                     page.get_by_role("option", name="Salesforce Chatter", exact=True).click()
                 except TimeoutError as e:
-                    # we just do nothing here
                     logger.warning(f"{str(e)}.\n Skip the initialization.")
                     pass
                 
-            # add additional delay
             additional_delay = 5
             time.sleep(additional_delay)
             logger.info(f"Waiting for {additional_delay} seconds after initialization")

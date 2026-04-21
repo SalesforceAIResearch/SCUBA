@@ -20,15 +20,14 @@ Please follow the instructions you received by email to access the org.
 
 - Fill in some value for `external client app name`. Take a note of this name, it will be used as the `org alias` (explained later) and `Contact Email` (your real email used to register the org).
 - In the `API (Enable OAuth Settings)` section, check the `Enable OAuth` box.
-- For `Callback URL`, input `https://login.salesforce.com/services/oauth2/success`.
+- For `Callback URL`, input `http://localhost:9876/callback`.
 
 <p align="center">
   <img src="../assets/figs/config_part1.png" style="max-height:600px; width:auto;"/>
 </p>
 
-- Select `Full access (full)` for OAuth Scopes and use the arrow button to add under the `Selected OAuth Scopes` section.
-- Repated the above step to add `Manage user data via APIs (api)`.
-- In the Flow Enablement section, check "Enable Client Credentials Flow", and click `OK` on the Confirm screen.
+- Select `Full access (full)`, `Manage user data via APIs (api)` and `Perform requests at any time (refresh_token, offline_access)` for OAuth Scopes and use the arrow button to add under the `Selected OAuth Scopes` section.
+- In the Flow Enablement section, check "Enable Client Credentials Flow", AND "Enable Authorization Code and Credentials Flow" and click `OK` on the Confirm screen.
 - Click `Create`.
 
 <p align="center">

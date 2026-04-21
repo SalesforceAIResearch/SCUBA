@@ -1,4 +1,6 @@
-## Temporarily By-pass two-way authentication (New as of 2025-10-23)
+[UPDATED as of 2026-04-21] No need to follow this tutorial anymore since we have granted more permissions to the external client app. Please refer to the [tutorial 1](./tutorials/get_consumer_key_secrete.md) to grant more permissions to the external client app. This should address the issue of the MFA prompt during the evaluation.
+
+## Temporarily By-pass two-way authentication (Deprecated as of 2026-04-21)
 
 If this is your first time logging in to Salesforce, you will be prompted to enter the verification code sent to your email. This is annoying since it will block your agent experiments.
 

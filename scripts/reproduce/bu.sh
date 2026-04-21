@@ -14,7 +14,6 @@ run_name="bu_gpt5"
 python main_bu.py \
     --query_instance_file ./data/test_zero_shot.json \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_bu.json \
     --solutions bu \
     --org_alias $ORG_ALIAS \
     --viewport_width 1920 \
@@ -42,7 +41,6 @@ concurrent_tasks=1 # you can increase this number if you have more higher rate l
 python main_bu.py \
     --query_instance_file ./data/test_zero_shot.json \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_bu.json \
     --solutions bu \
     --org_alias $ORG_ALIAS \
     --viewport_width 1920 \
@@ -71,7 +69,6 @@ concurrent_tasks=1 # you can increase this number if you have more higher rate l
 python main_bu.py \
     --query_instance_file ./data/test_zero_shot.json \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_bu.json \
     --solutions bu \
     --org_alias $ORG_ALIAS \
     --viewport_width 1920 \
@@ -100,7 +97,6 @@ concurrent_tasks=1 # you can increase this number if you have more higher rate l
 python main_bu.py \
     --query_instance_file ./data/test_zero_shot.json \
     --data_version $DATA_VERSION \
-    --storage_state_file_path data/auth_state_bu.json \
     --solutions bu \
     --org_alias $ORG_ALIAS \
     --viewport_width 1920 \
