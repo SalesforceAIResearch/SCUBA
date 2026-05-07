@@ -20,6 +20,8 @@ import shutil
 from scuba.helpers.salesforce_commands import authorize_using_access_token, install_initial_data, retrieve_initial_state_metadata, create_project_if_not_exists
 from scuba.helpers.sf_oauth import refresh_access_token
 from envs.remote_docker_env import RemoteDesktopEnv, ContainerConfig, ProviderConfig
+
+LOGIN_STAGGER_DELAY = 1
 from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches
 from args import get_args
 from lib_eval_single_task import evaluate_single_task_vllm, evaluate_single_task_api
@@ -224,7 +226,7 @@ def test(
             with ProcessPool(max_workers=num_envs) as pool:
                 task_idx = 0
                 completed_tasks = 0
-                # Submit initial batch (up to num_envs)
+                # Submit initial batch (up to num_envs), staggered to avoid frontdoor login collisions
                 while task_idx < num_tasks and not env_queue.empty():
                     env_idx = env_queue.get()
                     vllm_idx = vllm_client_idx % vllm_client_count
@@ -236,6 +238,8 @@ def test(
                     running_futures.append((future, env_idx, time.time()))
                     vllm_client_idx += 1
                     task_idx += 1
+                    if task_idx < num_tasks and not env_queue.empty():
+                        time.sleep(LOGIN_STAGGER_DELAY)
                 
                 # As tasks finish, submit new ones
                 while completed_tasks < num_tasks:
