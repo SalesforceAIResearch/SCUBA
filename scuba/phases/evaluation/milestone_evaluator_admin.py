@@ -423,6 +423,10 @@ class MilestoneEvaluator(BasePhase):
         if type(observed_filters) == dict:
             observed_filters = [observed_filters]
         observed_filters_formatted = [(f.get('field'), f.get('operation'), f.get('value')) for f in observed_filters]
+        for i, filter in enumerate(observed_filters_formatted):
+            if filter[0].lower().startswith(params.object_name.lower()+'.'):
+                new_field = filter[0][len(params.object_name.lower())+1:]
+                observed_filters_formatted[i] = (new_field, filter[1], filter[2])
         per_filter_weight = 0.5 / len(target_filters)
 
         for target_filter in target_filters:

@@ -5,13 +5,50 @@ It contains evaluation methods that work with pre-extracted data and return stru
 import types
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Union
+from urllib.parse import unquote
+import gensim.downloader as api
+from numpy import dot
+from numpy.linalg import norm
+import numpy as np
 from dateutil.relativedelta import relativedelta
 from scuba.phases.base_phase import BasePhase
+
+
+def _normalize_text(s: str) -> str:
+    """Normalize visually equivalent characters for comparison.
+
+    Currently handles:
+      - en-dash '–' (U+2013) ↔ hyphen '-' (U+002D)
+      - em-dash '—' (U+2014) ↔ hyphen '-' (U+002D)
+    """
+    return s.replace('\u2013', '-').replace('\u2014', '-')
+
+
+def _names_equal(a: str, b: str) -> bool:
+    """Compare two names treating visually similar characters as equal."""
+    return _normalize_text(a) == _normalize_text(b)
+
+
+def _dates_match(actual_date_str: str, expected_date, tolerance_days: int = 1) -> bool:
+    """Check if actual date string matches expected date within ± tolerance_days.
+
+    Accounts for ambiguity in natural-language date references (e.g. "today",
+    "next week") where the LLM's system date may differ from the evaluator's
+    date by up to 1 day.
+    """
+    try:
+        actual = datetime.strptime(actual_date_str, "%Y-%m-%d").date()
+        if isinstance(expected_date, datetime):
+            expected_date = expected_date.date()
+        return abs((actual - expected_date).days) <= tolerance_days
+    except (ValueError, TypeError):
+        return False
 
 
 class MilestoneEvaluator(BasePhase):
     def __init__(self, org_alias):
         super().__init__(org_alias)
+        self.model = api.load("glove-wiki-gigaword-100")
 
     def evaluate_template_create_account_and_contact(self, data: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
         params = types.SimpleNamespace(**kwargs)
@@ -21,19 +58,25 @@ class MilestoneEvaluator(BasePhase):
 
         contact_data = data.get('get_contact')
         contact_exists = contact_data is not None and len(contact_data.records) > 0
+        contact_linked_to_account = contact_exists and _names_equal(contact_data.records[0]['Account.Name'], params.company_name)
         correct_email = contact_exists and contact_data.records[0]['Email'] == params.email_address if params.email_address else True
-        correct_name = contact_exists and contact_data.records[0]['Name'] == params.contact_name
+        correct_name = contact_exists and _names_equal(contact_data.records[0]['Name'], params.contact_name)
         correct_phone = contact_exists and (contact_data.records[0]['Phone'] == params.phone_number or contact_data.records[0]['MobilePhone'] == params.phone_number or contact_data.records[0]['HomePhone'] == params.phone_number) if params.phone_number else True
         step_weight = 0.2 if params.phone_number and params.email_address else 0.3
         milestones = [
             {
                 "milestone": f"Create Account for {params.company_name}",
                 "is_success": account_exists_with_correct_name,
-                "weight": 0.2
+                "weight": 0.1
             },
             {
-                "milestone": f"Create contact for the same Account",
-                "is_success": contact_exists,
+                'milestone': f"Create Contact {params.contact_name}",
+                'is_success': contact_exists,
+                'weight': 0.1
+            },
+            {
+                "milestone": f"Link contact to the created Account",
+                "is_success": contact_linked_to_account,
                 "weight": step_weight
             },
             {
@@ -81,7 +124,7 @@ class MilestoneEvaluator(BasePhase):
             },
             {
                 'milestone': f'Set expiration date to {params.expiration_duration} from today',
-                'is_success': quote_exists and quote_info[0]['ExpirationDate'] == vars()[params.expiration_duration].strftime("%Y-%m-%d"),
+                'is_success': quote_exists and _dates_match(quote_info[0]['ExpirationDate'], vars()[params.expiration_duration]),
                 'weight': 0.2
             },
             {
@@ -113,7 +156,7 @@ class MilestoneEvaluator(BasePhase):
         milestones = []
         step_weight = 1.0 / (len(params.hierarchies) + 2*sum([len(subsidiaries) for subsidiaries in params.hierarchies.values()]))
         for parent_company_name, subsidiaries in params.hierarchies.items():
-            parent_account_record = [item for item in account_records if item['Name'] == parent_company_name]
+            parent_account_record = [item for item in account_records if _names_equal(item['Name'], parent_company_name)]
             parent_account_exists = len(parent_account_record) > 0
             milestones.append({
                 "milestone": f"Correctly create parent Account {parent_company_name}",
@@ -121,7 +164,7 @@ class MilestoneEvaluator(BasePhase):
                 "weight": step_weight
             })
             for subsidiary_name in subsidiaries:
-                subsidiary_account_record = [item for item in account_records if item['Name'] == subsidiary_name]
+                subsidiary_account_record = [item for item in account_records if _names_equal(item['Name'], subsidiary_name)]
                 subsidiary_account_exists = len(subsidiary_account_record) > 0
                 milestones.append({
                     "milestone": f"Correctly create subsidiary Account {subsidiary_name}",
@@ -236,7 +279,7 @@ class MilestoneEvaluator(BasePhase):
         business_process_data = data['sales_process_metadata']
         business_process_exists = len(business_process_data) > 0
         sales_processes = business_process_data[0].metadata['BusinessProcess']['values'] if business_process_exists else []
-        observed_sales_process_names = set([item['fullName'] for item in sales_processes])
+        observed_sales_process_names = set([unquote(item['fullName']) for item in sales_processes])
         actual_sales_process_names = set(params.comma_separated_stages_list.split(', '))
         overlapping = actual_sales_process_names.intersection(observed_sales_process_names)
         extra = observed_sales_process_names.difference(actual_sales_process_names)
@@ -281,7 +324,7 @@ class MilestoneEvaluator(BasePhase):
             },
             {
                 'milestone': 'Correctly name the opportunity',
-                'is_success': opportunity_exists and opportunity_records[0]['Name'] == params.opportunity_name,
+                'is_success': opportunity_exists and _names_equal(opportunity_records[0]['Name'], params.opportunity_name),
                 'weight': 0.3
             },
             {
@@ -291,6 +334,21 @@ class MilestoneEvaluator(BasePhase):
             }
         ]
         return milestones
+
+    def __sentence_vector(self, sentence):
+        words=[w for w in sentence.lower().split() if w in self.model]
+        return np.mean([self.model[w] for w in words],axis=0)
+
+    def __fuzzy_match(self, string1, string2):
+        if string1 is None or string2 is None:
+            return False
+        if type(string1) != str or type(string2) != str:
+            return False
+        v1, v2 = self.__sentence_vector(string1), self.__sentence_vector(string2)
+        similarity = dot(v1, v2) / (norm(v1) * norm(v2))
+        if similarity > 0.8:
+            return True
+        return False
 
     def evaluate_template_update_opportunity_stage_and_activity(self, data: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
         params = types.SimpleNamespace(**kwargs)
@@ -303,13 +361,13 @@ class MilestoneEvaluator(BasePhase):
 
         if params.activity_type == 'Task' or params.activity_type == 'Email':
             activity_type_correct = activity_exists and activity_records[0]['TaskSubtype'] == params.activity_type
-            activity_description_correct = activity_exists and str(activity_records[0]['Subject']) == params.activity_description
+            activity_description_correct = activity_exists and self.__fuzzy_match(activity_records[0]['Subject'], params.activity_description)
         elif params.activity_type == 'Call':
             activity_type_correct = activity_exists and activity_records[0]['TaskSubtype'] == params.activity_type
-            activity_description_correct = activity_exists and str(activity_records[0]['Description']).lower() == params.activity_description.lower()
+            activity_description_correct = activity_exists and self.__fuzzy_match(str(activity_records[0]['Description']).lower(), params.activity_description.lower())
         elif params.activity_type == 'Event':
             activity_type_correct = event_exists and event_records[0]['EventSubtype'] == params.activity_type
-            activity_description_correct = event_exists and str(event_records[0]['Subject']) == params.activity_description
+            activity_description_correct = event_exists and self.__fuzzy_match(str(event_records[0]['Subject']), params.activity_description)
         else:
             activity_type_correct = False
             activity_description_correct = False
@@ -401,7 +459,7 @@ class MilestoneEvaluator(BasePhase):
             },
             {
                 'milestone': f'Correctly add start date {params.start_date}',
-                'is_success': contract_exists and contract_records[0]['StartDate'] == expected_contract_start_date.strftime('%Y-%m-%d'),
+                'is_success': contract_exists and _dates_match(contract_records[0]['StartDate'], expected_contract_start_date),
                 'weight': 0.2
             },
             {
@@ -416,7 +474,7 @@ class MilestoneEvaluator(BasePhase):
             },
             {
                 'milestone': 'Correctly set the start date for order',
-                'is_success': order_exists and order_records[0]['EffectiveDate'] == expected_order_start_date.strftime('%Y-%m-%d'),
+                'is_success': order_exists and _dates_match(order_records[0]['EffectiveDate'], expected_order_start_date),
                 'weight': 0.2
             }
         ]
@@ -442,7 +500,7 @@ class MilestoneEvaluator(BasePhase):
             },
             {
                 'milestone': f'Correctly set start date to {expected_start_date.strftime("%Y-%m-%d")}',
-                'is_success': campaign_exists and campaign_records[0]['StartDate'] == expected_start_date.strftime('%Y-%m-%d'),
+                'is_success': campaign_exists and _dates_match(campaign_records[0]['StartDate'], expected_start_date),
                 'weight': 0.2
             },
             {

@@ -124,7 +124,7 @@
         "type": "soql",
         "id": "knowledge_article_info",
         "params": {
-            "query": "SELECT Id, PublishStatus, Question__c, Answer__c FROM Knowledge__kav WHERE Title='{article_title}'"
+            "query": "SELECT Id, PublishStatus, Question__c, FAQ_Answer__c FROM Knowledge__kav WHERE Title='{article_title}'"
           }
       }
     ],

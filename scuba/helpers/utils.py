@@ -1,10 +1,14 @@
 import json
 import os
+import logging
 import string
 import re
 import xmltodict
 from jsondiff import diff
 from dict2xml import dict2xml
+
+logger = logging.getLogger(__name__)
+logger.propagate = True
 
 # Org Details utils
 orgs_info = json.load(open("orgs/orgs_info.json"))
@@ -33,7 +37,7 @@ def create_metadata_info_xml(types_and_members: dict, manifest_folder: str, is_d
         filename = 'destructiveChanges.xml'
     else:
         filename = 'package.xml'
-    print(f'Writing {types_and_members} to {filename}.')
+    logger.info(f'Writing {types_and_members} to {filename}.')
     with open(os.path.join(manifest_folder, filename), 'w') as f:
         f.write(xml_package)
 
@@ -116,7 +120,7 @@ def diff_xml(file1, file2):
 
 
 def compare_folders(folder_a, folder_b):
-    print(f"Comparing {folder_a} and {folder_b}.")
+    logger.info(f"Comparing {folder_a} and {folder_b}.")
     files_a = get_all_files(folder_a)
     files_b = get_all_files(folder_b)
     deleted_files = []
@@ -137,7 +141,7 @@ def compare_folders(folder_a, folder_b):
                     if xml_diffs:
                         modified_files.append(rel_path)
                 except Exception as e:
-                    print(f'Exception while comparing {rel_path}: {e}')
-    print(f"Found {len(new_files)} new files, {len(deleted_files)} files deleted, {len(modified_files)} files modified\n.")
+                    logger.info(f'Exception while comparing {rel_path}: {e}')
+    logger.info(f"Found {len(new_files)} new files, {len(deleted_files)} files deleted, {len(modified_files)} files modified\n.")
     return new_files, deleted_files, modified_files
 

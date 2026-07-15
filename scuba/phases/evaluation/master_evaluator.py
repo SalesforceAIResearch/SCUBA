@@ -116,26 +116,3 @@ class MilestoneEvaluator(BasePhase):
             failures = traceback.format_exc().splitlines()
             return ScoreCard(-1, [], failures)
 
-if __name__ == '__main__':
-    from scuba.helpers.salesforce_commands import authorize_using_access_token
-    RED = "\033[91m"
-    RESET = "\033[0m"
-
-    task_instances = json.load(open('data/test_zero_shot.json'))
-    template = None
-    # template = 'admin_009'
-    instance = None
-    instance = 'admin_008_003'
-    if template:
-        task_instances = [item for item in task_instances if item['query_template_metadata']['template_id'] == template]
-    elif instance:
-        task_instances = [item for item in task_instances if item['task_id'] == instance]
-    org_alias = 'YDCRMGUI'
-
-    authorize_using_access_token(org_alias)
-    evaluator = MilestoneEvaluator(org_alias=org_alias)
-    for instance in task_instances:
-        print(f'Running evaluation on instance {instance["task_id"]}')
-        score = evaluator.evaluate_instance(instance, agent_answer=None)
-        print(f'{RED} {score.__dict__()} {RESET}')
-

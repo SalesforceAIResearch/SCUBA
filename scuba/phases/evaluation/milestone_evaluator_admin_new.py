@@ -113,9 +113,14 @@ class MilestoneEvaluator(BasePhase):
                 'weight': 0.3
             },
             {
-                'milestone': f'Add the list of items correctly to the global value set',
+                'milestone': f'Add the list items correctly to the global value set',
+                'is_success': set(items) == set([val.strip() for val in params.comma_separated_values.split(',')]),
+                'weight': 0.4
+            },
+            {
+                'milestone': f'Maintain correct order of list items',
                 'is_success': items == [val.strip() for val in params.comma_separated_values.split(',')],
-                'weight': 0.7
+                'weight': 0.3
             }
         ]
         return milestones

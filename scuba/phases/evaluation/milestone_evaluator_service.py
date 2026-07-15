@@ -15,6 +15,22 @@ from typing import List, Dict, Any, Union
 from scuba.phases.base_phase import BasePhase
 
 
+def _dates_match(actual_date, expected_date, tolerance_days: int = 1) -> bool:
+    """Check if actual date matches expected date within ± tolerance_days.
+
+    Accounts for ambiguity in natural-language date references where the
+    LLM's system date may differ from the evaluator's date by up to 1 day.
+    """
+    try:
+        if isinstance(actual_date, str):
+            actual_date = datetime.strptime(actual_date, "%Y-%m-%d").date()
+        if isinstance(expected_date, datetime):
+            expected_date = expected_date.date()
+        return abs((actual_date - expected_date).days) <= tolerance_days
+    except (ValueError, TypeError):
+        return False
+
+
 class MilestoneEvaluator(BasePhase):
     def __init__(self, org_alias):
         super().__init__(org_alias)
@@ -190,9 +206,12 @@ class MilestoneEvaluator(BasePhase):
 
 
     def _convert_relative_date_to_absolute_date(self, relative_date: str) -> date:
+        return self._convert_relative_date_to_absolute_date_from(relative_date, date.today())
+
+    def _convert_relative_date_to_absolute_date_from(self, relative_date: str, base_date: date) -> date:
+        """Convert a relative duration string to an absolute date from *base_date*."""
         pattern = r"(\d+)\s*(day|days|week|weeks|month|months|year|years)"
         matches = re.findall(pattern, relative_date)
-        base_date = date.today()
         result = base_date
         for num, unit in matches:
             num = int(num)
@@ -208,10 +227,10 @@ class MilestoneEvaluator(BasePhase):
 
     def evaluate_template_create_entitlement_record(self, data: Dict[str, Any], **kwargs) -> List[Dict[str, Any]]:
         params = types.SimpleNamespace(**kwargs)
-        
+
         entitlement_records = data['entitlement_info'].records
         entitlement_exists = len(entitlement_records) > 0
-        
+
         type_correct = False
         start_date_exists = False
         end_date_exists = False
@@ -219,18 +238,52 @@ class MilestoneEvaluator(BasePhase):
         if entitlement_exists:
             entitlement_record = entitlement_records[0]
             type_correct = entitlement_record.get('Type') == params.support_type
-            if str(entitlement_record.get('StartDate')) != 'nan':
+
+            # --- Start date check ---
+            actual_start = entitlement_record.get('StartDate')
+            if str(actual_start) != 'nan':
                 try:
                     datetime.strptime(str(params.start_date_relative), "%Y-%m-%d")
-                    start_date_exists = datetime.strptime(entitlement_record.get('StartDate'), "%Y-%m-%d").date() == datetime.strptime(params.start_date_relative, "%Y-%m-%d").date()
+                    start_date_exists = _dates_match(
+                        actual_start,
+                        datetime.strptime(params.start_date_relative, "%Y-%m-%d").date(),
+                    )
                 except ValueError:
-                    start_date_exists = datetime.strptime(entitlement_record.get('StartDate'), "%Y-%m-%d").date() == self._convert_relative_date_to_absolute_date(params.start_date_relative)
-            if str(entitlement_record.get('EndDate')) != 'nan':
+                    start_date_exists = _dates_match(
+                        actual_start,
+                        self._convert_relative_date_to_absolute_date(params.start_date_relative),
+                    )
+
+            # --- End date check ---
+            # The end_date_relative (e.g. "1 year") is ambiguous: it could mean
+            #   (a) today + duration, OR
+            #   (b) actual_start_date + duration  (LLM interprets "expires in 1 year"
+            #       as the entitlement lasting 1 year from its start date)
+            # Accept either interpretation.
+            actual_end = entitlement_record.get('EndDate')
+            if str(actual_end) != 'nan':
                 try:
                     datetime.strptime(str(params.end_date_relative), "%Y-%m-%d")
-                    end_date_exists = datetime.strptime(entitlement_record.get('EndDate'), "%Y-%m-%d").date() == datetime.strptime(params.end_date_relative, "%Y-%m-%d").date()
+                    end_date_exists = _dates_match(
+                        actual_end,
+                        datetime.strptime(params.end_date_relative, "%Y-%m-%d").date(),
+                    )
                 except ValueError:
-                    end_date_exists = datetime.strptime(entitlement_record.get('EndDate'), "%Y-%m-%d").date() == self._convert_relative_date_to_absolute_date(params.end_date_relative)
+                    # Interpretation (a): end = today + end_duration
+                    expected_end_from_today = self._convert_relative_date_to_absolute_date(params.end_date_relative)
+                    end_date_exists = _dates_match(actual_end, expected_end_from_today)
+
+                    if not end_date_exists:
+                        # Interpretation (b): end = actual_start + end_duration
+                        # The LLM may compute EndDate = StartDate + duration
+                        try:
+                            actual_start_date = datetime.strptime(str(actual_start), "%Y-%m-%d").date() if isinstance(actual_start, str) else actual_start
+                            expected_end_from_start = self._convert_relative_date_to_absolute_date_from(
+                                params.end_date_relative, actual_start_date
+                            )
+                            end_date_exists = _dates_match(actual_end, expected_end_from_start)
+                        except (ValueError, TypeError):
+                            pass
         
         milestones = [
             {
@@ -426,7 +479,11 @@ class MilestoneEvaluator(BasePhase):
         if article_exists:
             article_record = knowledge_article_records[0]
             publish_status_correct = article_record.get('PublishStatus') == params.article_published
-            details_correct = html.unescape(re.sub(r'<[^>]*>', '', article_record.get('Question__c')).strip()) == params.question_desc and html.unescape(re.sub(r'<[^>]*>', '', article_record.get('Answer__c')).strip()) == params.answer_desc
+            raw_question = article_record.get('Question__c')
+            raw_answer = article_record.get('Answer__c')
+            question_text = html.unescape(re.sub(r'<[^>]*>', '', str(raw_question) if raw_question is not None else '').strip())
+            answer_text = html.unescape(re.sub(r'<[^>]*>', '', str(raw_answer) if raw_answer is not None else '').strip())
+            details_correct = question_text == params.question_desc and answer_text == params.answer_desc
         
         milestones = [
             {

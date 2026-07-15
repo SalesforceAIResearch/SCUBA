@@ -5,6 +5,7 @@ It contains the Resetter class and methods to reset the Salesforce org to a know
 
 import os
 import json
+import logging
 import shutil
 import traceback
 import threading
@@ -19,7 +20,7 @@ from scuba.helpers.utils import create_metadata_info_xml, compare_folders, conve
 from scuba.helpers.salesforce_commands import get, retrieve_latest_metadata, deploy, run_query, \
     execute_sfdx_command, authorize_using_access_token, patch, delete, DeployError
 from scuba.phases.prerequisites import Prerequisites
-
+logger = logging.getLogger(__name__)
 
 class Resetter(BasePhase):
     def __init__(self, org_alias, metadata_types, objects, prerequisites):
@@ -65,22 +66,81 @@ class Resetter(BasePhase):
                 url = raw_response.get('records')[0]['attributes']['url']
                 delete(self.org_alias, url)
 
+    def __execute_delete(self, command):
+        stdout, stderr = execute_sfdx_command(command)
+        if stderr:
+            # sf CLI writes progress/success messages to stderr (e.g.
+            # "Deleting Record... Success").  Only log as ERROR when the
+            # output actually signals a failure.
+            stripped = stderr.strip()
+            if 'Success' in stripped or stripped == 'Deleting Record... done':
+                logger.debug(stripped)
+            else:
+                logger.error(stderr)
+
+    def __bulk_delete(self, object_name, record_ids):
+        username = get_org_info(self.org_alias)['username']
+        threads = []
+        for id in record_ids:
+            delete_command=f'sf data delete record --sobject {object_name} --record-id {id} -o {username}'
+            thread=threading.Thread(target=self.__execute_delete,args=(delete_command,))
+            threads.append(thread)
+            thread.start()
+        for thread in tqdm(threads,desc="Deleting records"):
+            thread.join()
 
     def __reset_data(self):
         """
         Resets the data in the Salesforce org by deleting records created after the last reset.
         """
+        # Deactivate Territory2Models before deleting — active models can't be deleted
+        if 'Territory2Model' in self.objects:
+            self.__deactivate_territory_models()
+
+        # Delete UserRole objects twice to remove dependencies
+        if 'UserRole' in self.objects:
+            self.objects.append('UserRole')
+
+        # Delete Entitlement records before Account, since Accounts can't be deleted
+        # while associated Entitlements exist
+        if 'Account' in self.objects and 'Entitlement' not in self.objects:
+            self.objects.insert(self.objects.index('Account'), 'Entitlement')
+
+        # Delete Case before Contact, since Contacts can't be deleted
+        # while associated Cases reference them
+        if 'Contact' in self.objects and 'Case' not in self.objects:
+            self.objects.insert(self.objects.index('Contact'), 'Case')
+
+        # Delete QuoteLineItem before Product2, since Products can't be deleted
+        # while associated QuoteLineItems exist
+        if 'Product2' in self.objects and 'QuoteLineItem' not in self.objects:
+            self.objects.insert(self.objects.index('Product2'), 'QuoteLineItem')
+
+        # Territory assignment rules with Boolean filters block item deletion.
+        # Clear BooleanFilter on rules first, then delete items, then rules.
+        if 'ObjectTerritory2AssignmentRule' in self.objects:
+            self.__clear_territory_rule_boolean_filters()
+            if 'ObjectTerritory2AssignmentRuleItem' not in self.objects:
+                self.objects.insert(
+                    self.objects.index('ObjectTerritory2AssignmentRule'),
+                    'ObjectTerritory2AssignmentRuleItem')
+
+        # Objects that don't support LastModifiedBy relationship in SOQL
+        _no_last_modified_by = {'QueueSobject', 'ObjectTerritory2AssignmentRuleItem'}
+
         for object in self.objects:
             if object == 'Queue':
-                query = f'SELECT FIELDS(ALL) FROM Group WHERE Type = \'{object}\' AND SystemModstamp >= LAST_N_DAYS:30 LIMIT 200'
+                query = f'SELECT FIELDS(ALL) FROM Group WHERE Type = \'{object}\' AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\' LIMIT 200'
             elif object == 'UserLogin':
                 query = f'SELECT Id, IsFrozen, UserId FROM {object}'
+            elif object in _no_last_modified_by:
+                query = f'SELECT FIELDS(ALL) FROM {object} LIMIT 200'
             else:
-                query = f'SELECT FIELDS(ALL) FROM {object} WHERE SystemModstamp >= LAST_N_DAYS:30 LIMIT 200'
+                query = f'SELECT FIELDS(ALL) FROM {object} WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\' LIMIT 200'
             try:
                 run_query(query, object, self.org_alias)
             except Exception as e:
-                print(f'Querying object {object} failed with error: {traceback.format_exc()}')
+                logger.info(f'Querying object {object} failed with error: {traceback.format_exc()}')
         for o in self.objects:
             initial_data_directory = os.path.join('initial_data', self.org_alias)
             old_data_file = os.path.join(initial_data_directory, f'{o}.csv')
@@ -94,7 +154,7 @@ class Resetter(BasePhase):
             try:
                 new_df = pd.read_csv(f'{o}.csv')
             except (EmptyDataError, FileNotFoundError) as e:
-                print(f'No data found for {o} object.')
+                logger.info(f'No data found for {o} object.')
                 if os.path.exists(f'{o}.csv'):
                     os.remove(f'{o}.csv')
                 continue
@@ -103,24 +163,9 @@ class Resetter(BasePhase):
                 new_ids = set(new_df['Id'].values.tolist()).difference(set(old_data['Id'].values.tolist()))
             else:
                 new_ids = set(new_df['Id'].values.tolist())
-            print(f'Found {len(new_ids)} new IDs in {o} object.')
+            logger.info(f'Found {len(new_ids)} new IDs in {o} object.')
             if len(new_ids) > 0:
-                new_df[new_df['Id'].isin(new_ids)][['Id']].to_csv(f'new_{o}.csv', index=False)
-                username = get_org_info(self.org_alias)['username']
-                if o in ['Queue', 'Knowledge__ka']:
-                    threads = []
-                    if o == 'Queue':
-                        sobject_type = 'Group'
-                    else:
-                        sobject_type = o
-                    for id in new_ids:
-                        bulk_delete_command = f'sf data delete record --sobject {sobject_type} --record-id {id} -o {username}'
-                        thread = threading.Thread(target=execute_sfdx_command, args=(bulk_delete_command,))
-                        threads.append(thread)
-                        thread.start()
-                    for thread in tqdm(threads, desc="Deleting records"):
-                        thread.join()
-                elif o == 'UserLogin':
+                if o == 'UserLogin':
                     threads = []
                     for id in new_ids:
                         endpoint = f'/services/data/v62.0/sobjects/UserLogin/{id}'
@@ -129,9 +174,13 @@ class Resetter(BasePhase):
                         thread.start()
                     for thread in tqdm(threads, desc="Patching records"):
                         thread.join()
+                    continue
+                if o == 'Queue':
+                    sobject_type = 'Group'
                 else:
-                    bulk_delete_command = f'sf data delete bulk --sobject {o} --file new_{o}.csv -o {username}'
-                    execute_sfdx_command(bulk_delete_command)
+                    sobject_type = o
+
+                self.__bulk_delete(sobject_type, new_ids)
 
             # Find and patch modified Ids
             if old_data is not None:
@@ -150,12 +199,137 @@ class Resetter(BasePhase):
                     id = record['Id']
                     del record['Id']
                     endpoint = f'/services/data/v62.0/sobjects/{o}/{id}'
-                    patch(self.org_alias, endpoint, record)
+                    status, details = patch(self.org_alias, endpoint, record)
+                    if not status:
+                        logger.error(f'Failed to update {o} object {id}. Details: {details}')
 
             if os.path.exists(f'{o}.csv'):
                 os.remove(f'{o}.csv')
             if os.path.exists(f'new_{o}.csv'):
                 os.remove(f'new_{o}.csv')
+
+    def __clear_territory_rule_boolean_filters(self):
+        """Clear BooleanFilter on territory assignment rules created by the test user.
+
+        When a rule has a Boolean filter (AND/OR), Salesforce blocks deletion of
+        individual RuleItem records with DEPENDENCY_EXISTS.  Clearing the filter
+        first allows items to be deleted normally.
+        """
+        try:
+            query = (
+                f"SELECT Id, BooleanFilter FROM ObjectTerritory2AssignmentRule "
+                f"WHERE LastModifiedBy.Username='{os.environ['SALESFORCE_USERNAME']}' "
+                f"AND BooleanFilter != null"
+            )
+            result = get(self.org_alias,
+                         f"/services/data/v62.0/query?q={query.replace(' ', '+')}")
+            records = result.get('records', [])
+            for rec in records:
+                try:
+                    patch(self.org_alias,
+                          f"/services/data/v62.0/sobjects/ObjectTerritory2AssignmentRule/{rec['Id']}",
+                          {'BooleanFilter': None})
+                    logger.info(f"Cleared BooleanFilter on territory rule {rec['Id']}")
+                except Exception as e:
+                    logger.warning(f"Failed to clear BooleanFilter on rule {rec['Id']}: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to query/clear territory rule BooleanFilters: {e}")
+
+    def __deactivate_territory_models(self):
+        """Delete Territory2Model records created by the test user.
+
+        Salesforce Territory2Model lifecycle: Active → Archived → Deleted.
+        Archiving is an async background job that can take 30+ seconds, so
+        polling for the state change is unreliable.  Instead we:
+          1. Set State='Deleted' directly (skips the Archived wait).
+          2. If that fails, fall back to Archive then DELETE API call.
+          3. Remove Territory2Model from self.objects so __reset_data()
+             doesn't try to delete it again via sf data delete record.
+        """
+        try:
+            query = (
+                f"SELECT Id, Name, State FROM Territory2Model "
+                f"WHERE LastModifiedBy.Username='{os.environ['SALESFORCE_USERNAME']}' "
+                f"AND State IN ('Active', 'Planning')"
+            )
+            result = get(self.org_alias,
+                         f"/services/data/v62.0/query?q={query.replace(' ', '+')}")
+            records = result.get('records', [])
+            if not records:
+                return
+            for rec in records:
+                try:
+                    # Try direct deletion via State='Deleted'
+                    patch(self.org_alias,
+                          f"/services/data/v62.0/sobjects/Territory2Model/{rec['Id']}",
+                          {'State': 'Deleted'})
+                    logger.info(f"Set Territory2Model '{rec['Name']}' to Deleted ({rec['Id']})")
+                except Exception:
+                    # Fall back: archive first, then use REST DELETE
+                    try:
+                        patch(self.org_alias,
+                              f"/services/data/v62.0/sobjects/Territory2Model/{rec['Id']}",
+                              {'State': 'Archived'})
+                        logger.info(f"Archived Territory2Model '{rec['Name']}' ({rec['Id']})")
+                    except Exception as e2:
+                        logger.warning(f"Failed to archive Territory2Model '{rec['Name']}': {e2}")
+                        continue
+                    try:
+                        delete(self.org_alias,
+                               f"/services/data/v62.0/sobjects/Territory2Model/{rec['Id']}")
+                        logger.info(f"Deleted Territory2Model '{rec['Name']}' via REST API ({rec['Id']})")
+                    except Exception as e3:
+                        logger.warning(f"Failed to delete Territory2Model '{rec['Name']}' via REST: {e3}")
+            # Remove from objects list so __reset_data bulk delete doesn't re-attempt
+            while 'Territory2Model' in self.objects:
+                self.objects.remove('Territory2Model')
+        except Exception as e:
+            logger.warning(f"Failed to query/delete Territory2Models: {e}")
+
+    def __deactivate_entitlement_processes(self):
+        """Deactivate all EntitlementProcess (SlaProcess) records created by the test user
+        so they can be removed by a subsequent destructive deploy."""
+        try:
+            query = (
+                f"SELECT Id, Name, IsActive FROM SlaProcess "
+                f"WHERE LastModifiedBy.Username='{os.environ['SALESFORCE_USERNAME']}' "
+                f"AND IsActive = true"
+            )
+            result = get(self.org_alias,
+                         f"/services/data/v62.0/query?q={query.replace(' ', '+')}")
+            records = result.get('records', [])
+            for rec in records:
+                try:
+                    patch(self.org_alias,
+                          f"/services/data/v62.0/sobjects/SlaProcess/{rec['Id']}",
+                          {'IsActive': False})
+                    logger.info(f"Deactivated EntitlementProcess '{rec['Name']}' ({rec['Id']})")
+                except Exception as e:
+                    logger.warning(f"Failed to deactivate EntitlementProcess '{rec['Name']}': {e}")
+        except Exception as e:
+            logger.warning(f"Failed to query/deactivate EntitlementProcesses: {e}")
+
+    def __delete_entitlement_records(self):
+        """Delete Entitlement records created by the test user.
+
+        Must run *before* deactivating / destructive-deploying EntitlementProcess,
+        because an SlaProcess cannot be deactivated while Entitlement records
+        still reference it ("Cannot update SLA process that is in use").
+        """
+        try:
+            query = (
+                f"SELECT Id FROM Entitlement "
+                f"WHERE LastModifiedBy.Username='{os.environ['SALESFORCE_USERNAME']}'"
+            )
+            result = get(self.org_alias,
+                         f"/services/data/v62.0/query?q={query.replace(' ', '+')}")
+            records = result.get('records', [])
+            if records:
+                ids = [r['Id'] for r in records]
+                logger.info(f"Deleting {len(ids)} Entitlement records before EntitlementProcess cleanup")
+                self.__bulk_delete('Entitlement', ids)
+        except Exception as e:
+            logger.warning(f"Failed to delete Entitlement records: {e}")
 
     def __deploy_diff(self):
         """
@@ -164,7 +338,7 @@ class Resetter(BasePhase):
 
         for type in self.metadata_types:
             if type in ['ListView', 'MatchingRule']:
-                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE SystemModstamp >= LAST_N_DAYS:10'
+                query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
@@ -179,11 +353,28 @@ class Resetter(BasePhase):
                     try:
                         deploy(self.modified_orgs_dir, self.org_alias)
                     except DeployError as exc:
-                        print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                        logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
             elif type == 'ValidationRule':
                 self.__reset_validation_rule()
+            elif type in ['AssignmentRules']:
+                query = f'SELECT Id, SObjectType, Name FROM AssignmentRule  WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
+                run_query(query, type, self.org_alias)
+                try:
+                    df = pd.read_csv(f'{type}.csv')
+                    df['member']=df['SobjectType']+'.'+df['Name']
+                    new_members = df['member'].values.tolist()
+                    for member in new_members:
+                        destructive_changes_types_and_members = {'AssignmentRule': [member]}
+                        create_metadata_info_xml(destructive_changes_types_and_members, self.manifest_dir, is_destructive=True)
+                        create_metadata_info_xml({}, self.manifest_dir, is_destructive=False)
+                        try:
+                            deploy(self.modified_orgs_dir, self.org_alias)
+                        except DeployError as exc:
+                            logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                except (EmptyDataError, Exception) as exc:
+                    continue
             elif type in ['Report']:
-                query = f'SELECT Id FROM Report WHERE SystemModstamp >= LAST_N_DAYS:10'
+                query = f'SELECT Id FROM Report WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
                     df = pd.read_csv(f'{type}.csv')
@@ -192,6 +383,14 @@ class Resetter(BasePhase):
                 for Id in df['Id'].values.tolist():
                     delete(self.org_alias, f'/services/data/v62.0/analytics/reports/{Id}')
             else:
+                # EntitlementProcess (SlaProcess) can only be removed when:
+                #   1. No Entitlement records reference it  (delete data first)
+                #   2. The process is deactivated            (patch IsActive=false)
+                # Then the destructive deploy can succeed.
+                if type == 'EntitlementProcess':
+                    self.__delete_entitlement_records()
+                    self.__deactivate_entitlement_processes()
+
                 folder_name_for_type = convert_type_to_folder_name(type)
                 before_folder = os.path.join(self.initial_metadata_details_dir, folder_name_for_type)
                 after_folder = os.path.join(self.modified_metadata_details_dir, folder_name_for_type)
@@ -213,7 +412,7 @@ class Resetter(BasePhase):
                         try:
                             deploy(self.modified_orgs_dir, self.org_alias)
                         except DeployError as exc:
-                            print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                            logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
                     destructive_changes_types_and_members.setdefault(type, [])
                     destructive_changes_types_and_members[type].append(member_name)
                     create_metadata_info_xml(destructive_changes_types_and_members, self.manifest_dir, is_destructive=True)
@@ -221,7 +420,7 @@ class Resetter(BasePhase):
                     try:
                         deploy(f'orgs/modified_state/{self.org_alias}', self.org_alias)
                     except DeployError as exc:
-                        print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                        logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
                     to_remove = os.path.join(self.modified_metadata_details_dir, folder_name_for_type, file)
                     if os.path.isfile(to_remove):
                         os.remove(to_remove)
@@ -241,7 +440,7 @@ class Resetter(BasePhase):
                     try:
                         deploy(f'orgs/modified_state/{self.org_alias}', self.org_alias)
                     except DeployError as exc:
-                        print(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
+                        logger.info(f'Failed to deploy {type}. Traceback: {traceback.format_exc()}')
 
 if __name__ == '__main__':
     resetter = Resetter(org_alias='YDCRMGUI', metadata_types=["ValidationRule"], objects=[], prerequisites={})

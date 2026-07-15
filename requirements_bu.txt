@@ -24,3 +24,4 @@ fastapi>=0.115.8
 inngest>=0.4.19
 uvicorn>=0.34.0
 langchain_google_vertexai==2.1.2
+gensim==4.4.0

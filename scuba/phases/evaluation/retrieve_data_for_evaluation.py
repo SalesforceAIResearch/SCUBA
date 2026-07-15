@@ -264,7 +264,8 @@ class DataRetriever(BasePhase):
         """
         parent_object_for_type = {
             'ListView': 'CustomObject',
-            'CustomField': 'CustomObject'
+            'CustomField': 'CustomObject',
+            'BusinessProcess': 'CustomObject'
         }
         folder_name = convert_type_to_folder_name(metadata_type)
         if '.' in member:

@@ -404,12 +404,12 @@ if __name__ == '__main__':
     instance_dict3 = {
         "territory_model_name": "by Finance Industry",
         "rule_name": "Industry, Active and Type",
-        "selection_criteria": "Industry equals Finance, Account equals Active, and Type is not equal to Channel/Partner Reseller or Installation Partner"
+        "selection_criteria": "Industry equals Finance, Account equals Active, and Type is not equal to Channel Partner / Reseller or Installation Partner"
     }
     ground_truth_dict3 = {
         "territory_model_name": "by Finance Industry",
         "rule_name": "Industry, Active and Type",
-        "filters": [("Account.Industry", "equals", "Finance"), ("Account.Active__c", "equals", "true"), ("Account.Type", "notEqual", "Channel/Partner Reseller"), ("Account.Type", "notEqual", "Installation Partner")]
+        "filters": [("Account.Industry", "equals", "Finance"), ("Account.Active__c", "equals", "Yes"), ("Account.Type", "notEqual", "Channel Partner / Reseller"), ("Account.Type", "notEqual", "Installation Partner")]
     }
     create_task_instance(query_template_name, "003", category, subcategory,
                          instance_dict3, ground_truth_dict3, difficulty,
@@ -843,7 +843,7 @@ if __name__ == '__main__':
         "campaign_type": "Email",
         "start_date": 1,
         "budget_amount": 9000,
-        "expected_revenue": 39500,
+        "expected_revenue": 37500,
         "leads": ['Priya Sharma', 'Lucas Chen', 'Jordan Hayes']
     }
     create_task_instance(query_template_name, "003", category, subcategory,
