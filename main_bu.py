@@ -17,7 +17,7 @@ import traceback
 import glob
 from playwright.async_api import async_playwright
 
-from utils import run_evaluate, run_reset, LogFormatter, split_task_config_pool_into_batches
+from utils import run_evaluate, run_reset, run_baseline_check, LogFormatter, split_task_config_pool_into_batches
 from args import get_args
 
 from scuba.phases.evaluation.master_evaluator import MilestoneEvaluator
@@ -179,6 +179,8 @@ async def aevaluate_single_task_bu(
                         input_token_price_per_million = args.input_token_price_per_million,
                         output_token_price_per_million = args.output_token_price_per_million
                         )
+        if args.pretask_baseline_check:
+            run_baseline_check(task_instance_dict, args.org_alias, this_task_logger)
         history, current_page = await agent.run(max_steps=args.max_steps)
         agent_answer = history.final_result()
         

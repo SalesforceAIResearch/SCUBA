@@ -17,6 +17,8 @@ def get_args():
     parser.add_argument("--history_n", type=int, default=1, help="number of past images to include for inference")
     parser.add_argument("--n_eval", type=int, default=1, help="number of times the task should be evaluated")
     parser.add_argument("--reset_orgs_before_eval", action="store_true")
+    parser.add_argument("--pretask_baseline_check", action=argparse.BooleanOptionalAction, default=True,
+                        help="Before each task, run the verifier on the starting org and warn if the baseline score is > 0 (indicates leftover artifacts). Disable with --no-pretask_baseline_check.")
     # options to rerun failed tasks
     parser.add_argument("--rerun_failed_tasks", action="store_true")
     
