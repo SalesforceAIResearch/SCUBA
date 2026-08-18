@@ -43,6 +43,8 @@ from browser_use.custom.utils import create_llm, summarize_usage_info_from_jsonf
 logger = logging.getLogger(__name__)
 load_dotenv(override=True)
 PAUSE_AFTER_LOGIN = 10
+LOGIN_STAGGER_DELAY = 1
+_frontdoor_login_lock = asyncio.Lock()
 class BrowserUseFormatter(logging.Formatter):
     def format(self, record):
         if type(record.name) == str and record.name.startswith('browser_use.'):
@@ -130,9 +132,11 @@ async def aevaluate_single_task_bu(
         @controller.action('Login to Salesforce website via frontdoor URL', param_model=NoParamsAction)
         async def login_salesforce(param_model: NoParamsAction, browser: BrowserContextBugFix) -> ActionResult:
             page = await browser.get_current_page()
-            oauth = refresh_access_token(args.org_alias)
-            frontdoor_url = get_frontdoor_url(oauth["access_token"], oauth["instance_url"])
-            await page.goto(frontdoor_url, wait_until="domcontentloaded")
+            async with _frontdoor_login_lock:
+                oauth = refresh_access_token(args.org_alias)
+                frontdoor_url = get_frontdoor_url(oauth["access_token"], oauth["instance_url"])
+                await page.goto(frontdoor_url, wait_until="domcontentloaded")
+                await asyncio.sleep(LOGIN_STAGGER_DELAY)
             await asyncio.sleep(PAUSE_AFTER_LOGIN)
 
             url = page.url

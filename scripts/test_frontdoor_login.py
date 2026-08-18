@@ -30,17 +30,16 @@ from browser_use.custom.browser_context_zoo import BrowserContextBugFix
 from scuba.helpers.sf_oauth import refresh_access_token, get_frontdoor_url
 
 PAUSE_AFTER_LOGIN = 12
+LOGIN_STAGGER_DELAY = 1
 
 
-async def launch_and_login(
+async def prepare_browser(
     instance_id: int,
-    oauth: dict,
     headless: bool,
     viewport_width: int,
     viewport_height: int,
 ):
-    instance_url = oauth["instance_url"].rstrip("/")
-
+    """Phase 1: launch browser and get a ready page. Safe to run in parallel."""
     print(f"[Instance {instance_id}] Launching Chromium (headless={headless})...")
     browser_config = BrowserConfig(headless=headless)
     browser = BrowserBugFix(browser_config)
@@ -51,11 +50,24 @@ async def launch_and_login(
     )
     context = BrowserContextBugFix(browser=browser, config=context_config)
 
+    session = await context.get_session()
+    page = session.current_page
+    print(f"[Instance {instance_id}] Browser ready")
+    return browser, context, page
+
+
+async def login_and_navigate(
+    instance_id: int,
+    oauth: dict,
+    page,
+    browser,
+    context,
+    headless: bool,
+):
+    """Phase 2: frontdoor login + post-login navigation. Run with stagger."""
+    instance_url = oauth["instance_url"].rstrip("/")
     success = False
     try:
-        session = await context.get_session()
-        page = session.current_page
-
         frontdoor_url = get_frontdoor_url(oauth["access_token"], oauth["instance_url"])
         print(f"[Instance {instance_id}] Got frontdoor URL ({len(frontdoor_url)} chars)")
 
@@ -140,17 +152,41 @@ async def main():
     test_url = get_frontdoor_url(oauth["access_token"], oauth["instance_url"])
     print(f"  singleaccess: OK ({len(test_url)} chars)")
 
-    print(f"\n--- Launching {args.num_instances} browser(s) ---\n")
-
-    tasks = [
-        launch_and_login(i, oauth, args.headless, args.viewport_width, args.viewport_height)
+    # Phase 1: launch all browsers in parallel
+    print(f"\n--- Phase 1: Launching {args.num_instances} browser(s) in parallel ---\n")
+    prepare_tasks = [
+        prepare_browser(i, args.headless, args.viewport_width, args.viewport_height)
         for i in range(args.num_instances)
     ]
-    raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+    prepared = await asyncio.gather(*prepare_tasks, return_exceptions=True)
+
+    ready = {}
+    for i, result in enumerate(prepared):
+        if isinstance(result, BaseException):
+            print(f"[Instance {i}] FAILED to launch browser: {result}")
+        else:
+            ready[i] = result
+
+    # Phase 2: staggered frontdoor login (~1s apart)
+    print(f"\n--- Phase 2: Logging in {len(ready)} browser(s) (stagger={LOGIN_STAGGER_DELAY}s) ---\n")
+    raw_results: dict[int, tuple | BaseException] = {}
+    for idx, i in enumerate(sorted(ready)):
+        if idx > 0:
+            await asyncio.sleep(LOGIN_STAGGER_DELAY)
+        browser, context, page = ready[i]
+        try:
+            raw_results[i] = await login_and_navigate(
+                i, oauth, page, browser, context, args.headless
+            )
+        except BaseException as e:
+            raw_results[i] = e
 
     successes = 0
     open_browsers: list[tuple[int, object, object]] = []
-    for i, r in enumerate(raw_results):
+    for i in range(args.num_instances):
+        if i not in raw_results:
+            continue
+        r = raw_results[i]
         if isinstance(r, BaseException):
             print(f"[Instance {i}] FAILED with exception: {r}")
             continue
