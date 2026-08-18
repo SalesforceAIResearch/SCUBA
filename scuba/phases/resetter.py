@@ -18,7 +18,8 @@ from pathlib import Path
 from scuba.phases.base_phase import BasePhase
 from scuba.helpers.utils import create_metadata_info_xml, compare_folders, convert_type_to_folder_name, get_org_info
 from scuba.helpers.salesforce_commands import get, retrieve_latest_metadata, deploy, run_query, \
-    execute_sfdx_command, authorize_using_access_token, patch, delete, DeployError
+    execute_sfdx_command, authorize_using_access_token, patch, delete, DeployError, \
+    scratch_csv_path
 from scuba.phases.prerequisites import Prerequisites
 logger = logging.getLogger(__name__)
 
@@ -125,15 +126,25 @@ class Resetter(BasePhase):
                     self.objects.index('ObjectTerritory2AssignmentRule'),
                     'ObjectTerritory2AssignmentRuleItem')
 
-        # Objects that don't support LastModifiedBy relationship in SOQL
-        _no_last_modified_by = {'QueueSobject', 'ObjectTerritory2AssignmentRuleItem'}
+        # Objects that don't support LastModifiedBy, or that are often last-modified
+        # by a different user than SALESFORCE_USERNAME (junctions / territory).
+        # LastModifiedBy filtering leaves leftovers behind.
+        _unfiltered_objects = {
+            'PermissionSetAssignment',
+            'QueueSobject',
+            'PermissionSetGroup',
+            'PermissionSetGroupComponent',
+            'ObjectTerritory2AssignmentRuleItem',
+            'ObjectTerritory2AssignmentRule',
+            'Territory2Model',
+        }
 
         for object in self.objects:
             if object == 'Queue':
                 query = f'SELECT FIELDS(ALL) FROM Group WHERE Type = \'{object}\' AND LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\' LIMIT 200'
             elif object == 'UserLogin':
                 query = f'SELECT Id, IsFrozen, UserId FROM {object}'
-            elif object in _no_last_modified_by:
+            elif object in _unfiltered_objects:
                 query = f'SELECT FIELDS(ALL) FROM {object} LIMIT 200'
             else:
                 query = f'SELECT FIELDS(ALL) FROM {object} WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\' LIMIT 200'
@@ -141,7 +152,25 @@ class Resetter(BasePhase):
                 run_query(query, object, self.org_alias)
             except Exception as e:
                 logger.info(f'Querying object {object} failed with error: {traceback.format_exc()}')
-        for o in self.objects:
+
+        # Delete children before parents. list mutation (inserts above) is not enough
+        # when junction/territory objects also appear later in the original list.
+        child_first = [
+            'ObjectTerritory2AssignmentRuleItem',
+            'ObjectTerritory2AssignmentRule',
+            'Territory2Model',
+            'PermissionSetGroupComponent',
+            'PermissionSetGroup',
+        ]
+        priority = {name: i for i, name in enumerate(child_first)}
+        ordered_objects = [
+            o for _, o in sorted(
+                enumerate(self.objects),
+                key=lambda io: (0, priority[io[1]], io[0]) if io[1] in priority else (1, io[0]),
+            )
+        ]
+
+        for o in ordered_objects:
             initial_data_directory = os.path.join('initial_data', self.org_alias)
             old_data_file = os.path.join(initial_data_directory, f'{o}.csv')
             if os.path.exists(old_data_file) and o != 'UserLogin':
@@ -151,12 +180,13 @@ class Resetter(BasePhase):
                     old_data = None
             else:
                 old_data = None
+            o_csv = scratch_csv_path(o)
             try:
-                new_df = pd.read_csv(f'{o}.csv')
+                new_df = pd.read_csv(o_csv)
             except (EmptyDataError, FileNotFoundError) as e:
                 logger.info(f'No data found for {o} object.')
-                if os.path.exists(f'{o}.csv'):
-                    os.remove(f'{o}.csv')
+                if os.path.exists(o_csv):
+                    os.remove(o_csv)
                 continue
             # Find and delete new Ids
             if old_data is not None:
@@ -199,14 +229,27 @@ class Resetter(BasePhase):
                     id = record['Id']
                     del record['Id']
                     endpoint = f'/services/data/v62.0/sobjects/{o}/{id}'
-                    status, details = patch(self.org_alias, endpoint, record)
+                    try:
+                        result = patch(self.org_alias, endpoint, record)
+                        if not result:
+                            logger.error(
+                                f'Patch returned None for {o} object {id}; skipping restore.'
+                            )
+                            continue
+                        status, details = result
+                    except (TypeError, ValueError) as exc:
+                        logger.error(
+                            f'Failed to unpack patch result for {o} object {id}: {exc}'
+                        )
+                        continue
                     if not status:
                         logger.error(f'Failed to update {o} object {id}. Details: {details}')
 
-            if os.path.exists(f'{o}.csv'):
-                os.remove(f'{o}.csv')
-            if os.path.exists(f'new_{o}.csv'):
-                os.remove(f'new_{o}.csv')
+            if os.path.exists(o_csv):
+                os.remove(o_csv)
+            new_o_csv = scratch_csv_path(f'new_{o}')
+            if os.path.exists(new_o_csv):
+                os.remove(new_o_csv)
 
     def __clear_territory_rule_boolean_filters(self):
         """Clear BooleanFilter on territory assignment rules created by the test user.
@@ -340,12 +383,16 @@ class Resetter(BasePhase):
             if type in ['ListView', 'MatchingRule']:
                 query = f'SELECT SObjectType, DeveloperName FROM {type} WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
+                type_csv = scratch_csv_path(type)
                 try:
-                    df = pd.read_csv(f'{type}.csv')
+                    df = pd.read_csv(type_csv)
                     df['member'] = df['SobjectType'] + '.' + df['DeveloperName']
                     new_members = df['member'].values.tolist()
                 except (EmptyDataError, Exception) as exc:
                     continue
+                finally:
+                    if os.path.exists(type_csv):
+                        os.remove(type_csv)
                 for member in new_members:
                     destructive_changes_types_and_members = {type: [member]}
                     create_metadata_info_xml(destructive_changes_types_and_members, self.manifest_dir, is_destructive=True)
@@ -360,7 +407,7 @@ class Resetter(BasePhase):
                 query = f'SELECT Id, SObjectType, Name FROM AssignmentRule  WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
-                    df = pd.read_csv(f'{type}.csv')
+                    df = pd.read_csv(scratch_csv_path(type))
                     df['member']=df['SobjectType']+'.'+df['Name']
                     new_members = df['member'].values.tolist()
                     for member in new_members:
@@ -377,7 +424,7 @@ class Resetter(BasePhase):
                 query = f'SELECT Id FROM Report WHERE LastModifiedBy.Username=\'{os.environ["SALESFORCE_USERNAME"]}\''
                 run_query(query, type, self.org_alias)
                 try:
-                    df = pd.read_csv(f'{type}.csv')
+                    df = pd.read_csv(scratch_csv_path(type))
                 except (EmptyDataError, FileNotFoundError) as exc:
                     continue
                 for Id in df['Id'].values.tolist():

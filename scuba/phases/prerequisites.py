@@ -16,7 +16,7 @@ import threading
 from tqdm import tqdm
 from scuba.phases.base_phase import BasePhase
 from scuba.helpers.utils import convert_type_to_folder_name, create_metadata_info_xml
-from scuba.helpers.salesforce_commands import deploy, post, patch, does_data_exist, authorize_using_access_token, create_project_if_not_exists, run_query
+from scuba.helpers.salesforce_commands import deploy, post, patch, does_data_exist, authorize_using_access_token, create_project_if_not_exists, run_query, scratch_csv_path
 
 logger = logging.getLogger(__name__)
 logger.propagate = True
@@ -96,13 +96,14 @@ class Prerequisites(BasePhase):
         soql = f"SELECT Id FROM {object_name} WHERE {field} = {value_name}"
         nickname = object_name + '_' + value_name.replace(' ', '_').replace('\'', '')
         run_query(soql, nickname, self.org_alias)
+        dependency_csv = scratch_csv_path(nickname)
         try:
-            df = pd.read_csv(f'{nickname}.csv')
+            df = pd.read_csv(dependency_csv)
         except pd.errors.EmptyDataError as e:
-            os.remove(f'{nickname}.csv')
+            os.remove(dependency_csv)
             return False, None
-        if os.path.exists(f'{nickname}.csv'):
-            os.remove(f'{nickname}.csv')
+        if os.path.exists(dependency_csv):
+            os.remove(dependency_csv)
         return True, df['Id'].values.tolist()[0]
 
     def __check_prerequisities_in_existing_data(self, object_name, record):
@@ -197,14 +198,18 @@ class Prerequisites(BasePhase):
         soql=f"SELECT Id FROM User WHERE Profile.Name='System Administrator'"
         nickname= 'admin_users'
         run_query(soql,nickname,self.org_alias)
+        # Read back the query output from the lane-local scratch dir (matches
+        # where run_query writes via scratch_csv_path). A bare '{nickname}.csv'
+        # here resolves to the CWD and fails when SCUBA_SCRATCH_DIR is set.
+        admin_users_csv = scratch_csv_path(nickname)
         try:
-            df=pd.read_csv(f'{nickname}.csv')
+            df=pd.read_csv(admin_users_csv)
             user_ids = df['Id'].values.tolist()
         except pd.errors.EmptyDataError as e:
-            os.remove(f'{nickname}.csv')
+            os.remove(admin_users_csv)
             user_ids = []
-        if os.path.exists(f'{nickname}.csv'):
-            os.remove(f'{nickname}.csv')
+        if os.path.exists(admin_users_csv):
+            os.remove(admin_users_csv)
         for id in user_ids:
             endpoint = f'/services/data/v62.0/sobjects/User/{id}'
             status, details = patch(self.org_alias, endpoint, {'UserPermissionsMarketingUser': True,

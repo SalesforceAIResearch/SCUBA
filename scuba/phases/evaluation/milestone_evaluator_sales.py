@@ -20,12 +20,20 @@ def _normalize_text(s: str) -> str:
     Currently handles:
       - en-dash '–' (U+2013) ↔ hyphen '-' (U+002D)
       - em-dash '—' (U+2014) ↔ hyphen '-' (U+002D)
+      - minus sign '−' (U+2212) ↔ hyphen '-' (U+002D)
     """
-    return s.replace('\u2013', '-').replace('\u2014', '-')
+    if s is None:
+        return ''
+    s = str(s)
+    for ch in "\u2013\u2014\u2212":
+        s = s.replace(ch, '-')
+    return ' '.join(s.split())
 
 
 def _names_equal(a: str, b: str) -> bool:
     """Compare two names treating visually similar characters as equal."""
+    if a is None or b is None:
+        return False
     return _normalize_text(a) == _normalize_text(b)
 
 

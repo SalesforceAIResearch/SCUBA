@@ -19,6 +19,23 @@ YELLOW = "\033[93m"
 RESET = "\033[0m"
 
 
+def scratch_dir() -> str:
+    """Lane-local directory for transient CSVs produced during eval/reset.
+
+    Parallel SCUBA lanes must not clobber each other's query outputs
+    (Account.csv, Report.csv, dashboard.csv, ...) in the shared working dir.
+    Override per-lane via ``SCUBA_SCRATCH_DIR``; defaults to cwd for back-compat.
+    """
+    d = os.environ.get("SCUBA_SCRATCH_DIR") or os.getcwd()
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def scratch_csv_path(nickname: str) -> str:
+    """Absolute path to a transient ``<nickname>.csv`` in the lane scratch dir."""
+    return os.path.join(scratch_dir(), f"{nickname}.csv")
+
+
 class DeployError(Exception):
     def __init__(self, deploy_output):
         self.message = self.__format_message(deploy_output)
@@ -27,20 +44,39 @@ class DeployError(Exception):
     def __format_message(self, deploy_output):
         return deploy_output[deploy_output.find('Component Failures'):]
 
-def get_access_token(org_alias: str):
+def get_access_token(org_alias: str, max_attempts: int = 4):
+    """Fetch an OAuth client_credentials access token for ``org_alias``.
+
+    The Salesforce token endpoint intermittently drops the TLS connection with
+    ``SSLError(SSLEOFError UNEXPECTED_EOF_WHILE_READING)``. Previously that was
+    swallowed and ``None`` was returned, which surfaced far downstream as a
+    confusing ``TypeError`` (``os.environ[...] = None``). Instead, retry the POST
+    a bounded number of times with short exponential backoff, and raise a clear
+    ``RuntimeError`` on final failure so a cell fails loudly with the real reason.
+    """
     endpoint = '/services/oauth2/token'
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     org_info = get_org_info(org_alias)
     instance = org_info['instance']
     client_id = org_info['client_key']
     client_secret = org_info['client_secret']
-    try:
-        data = {"grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret}
-        response = requests.post(instance + endpoint, headers=headers, data=data)
-        access_token = response.json()['access_token']
-        return access_token
-    except Exception as exc:
-        logger.info(f'Authorization failed with exception: {exc}')
+    data = {"grant_type": "client_credentials", "client_id": client_id, "client_secret": client_secret}
+    last_exc = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = requests.post(instance + endpoint, headers=headers, data=data, timeout=30)
+            access_token = response.json()['access_token']
+            return access_token
+        except Exception as exc:
+            last_exc = exc
+            logger.info(f'{YELLOW}Authorization attempt {attempt}/{max_attempts} for {org_alias} failed: {exc}{RESET}')
+            if attempt < max_attempts:
+                backoff = 2 ** attempt  # 2s, 4s, 8s, ...
+                time.sleep(backoff)
+    raise RuntimeError(
+        f'{RED}Authorization for {org_alias} failed after {max_attempts} attempts; '
+        f'last error: {last_exc}{RESET}'
+    )
 
 def get(org_alias: str, endpoint: str, access_token: str=None, instance: str=None):
     if access_token is None:
@@ -189,13 +225,14 @@ def run_query(query: str, nickname: str, org_alias: str):
     logger.info(f"Running query: {query}")
     username = get_org_info(org_alias)['username']
     start_time = time.time()
-    query_command = f"sf data query --query \"{query}\" --output-file {nickname}.csv --result-format csv -o {username}"
+    output_file = scratch_csv_path(nickname)
+    query_command = f"sf data query --query \"{query}\" --output-file \"{output_file}\" --result-format csv -o {username}"
     output, errors = execute_sfdx_command(query_command)
     if errors:
         if errors != 'Querying Data... done\n':
             raise RuntimeError(f'Query failed with {errors}')
     end_time = time.time()
-    logger.info(f"Query results saved in {nickname}.csv in {end_time - start_time} seconds.")
+    logger.info(f"Query results saved in {output_file} in {end_time - start_time} seconds.")
 
 def run_query_json(query: str, org_alias: str):
     logger.info(f"Running query: {query}")
@@ -221,8 +258,9 @@ def download_initial_csv(org_alias, object, destination_filename):
     logger.info(f"Downloading initial CSV for {object}.")
     query = f'SELECT FIELDS(ALL) FROM {object} LIMIT 200'
     run_query(query, object, org_alias)
-    if os.path.exists(f'{object}.csv'):
-        shutil.move(f'{object}.csv', destination_filename)
+    src = scratch_csv_path(object)
+    if os.path.exists(src):
+        shutil.move(src, destination_filename)
 
 def install_initial_data(org_alias, instances):
     logger.info(f"Downloading initial data (if not already found) for {org_alias}.")
@@ -233,7 +271,7 @@ def install_initial_data(org_alias, instances):
         objects = instance['query_template_metadata']['objects']
         all_objects.update(set(objects))
     for object in tqdm(all_objects):
-        if object in ['ObjectTerritory2AssignmentRuleItem', 'ObjectTerritory2AssignmentRule', 'Territory2Model', 'Queue', 'CallScript__c', 'VoiceCallTranscript__c', 'Knowledge__ka', 'Knowledge__kav']:
+        if object in ['Queue', 'CallScript__c', 'VoiceCallTranscript__c', 'Knowledge__ka', 'Knowledge__kav']:
             continue
         json_filepath = os.path.join(initial_data_directory, f'{object}.json')
         if not os.path.exists(json_filepath):
@@ -253,13 +291,15 @@ def does_data_exist(object: str, unique_keys_and_vals: dict, org_alias: str):
     query = f"SELECT FIELDS(ALL) FROM {object} WHERE {query_string} LIMIT 5"
     nickname = f"check_{object}_exists_{random.randint(100,900)}"
     run_query(query, nickname, org_alias)
+    csv_path = scratch_csv_path(nickname)
     try:
-        df = pd.read_csv(f'{nickname}.csv')
+        df = pd.read_csv(csv_path)
     except pd.errors.EmptyDataError as e:
-        os.remove(f'{nickname}.csv')
+        if os.path.exists(csv_path):
+            os.remove(csv_path)
         return False, None
-    if os.path.exists(f'{nickname}.csv'):
-        os.remove(f'{nickname}.csv')
+    if os.path.exists(csv_path):
+        os.remove(csv_path)
     return True, df['Id'].values.tolist()[0]
 
 if __name__ == "__main__":

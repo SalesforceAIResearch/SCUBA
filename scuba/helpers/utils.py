@@ -41,6 +41,24 @@ def create_metadata_info_xml(types_and_members: dict, manifest_folder: str, is_d
     with open(os.path.join(manifest_folder, filename), 'w') as f:
         f.write(xml_package)
 
+# en dash, em dash, minus sign — agents often copy these from the prompt
+_UNICODE_DASHES = "\u2013\u2014\u2212"
+
+
+def names_match(a, b) -> bool:
+    """Compare names treating Unicode dashes as ASCII hyphen-minus."""
+    if a is None or b is None:
+        return False
+
+    def fold(s):
+        s = str(s)
+        for ch in _UNICODE_DASHES:
+            s = s.replace(ch, "-")
+        return " ".join(s.split())
+
+    return fold(a) == fold(b)
+
+
 def normalize_answer(s):
     """Lower text and remove punctuation, articles and extra whitespace."""
 
@@ -51,7 +69,7 @@ def normalize_answer(s):
         return ' '.join(text.split())
 
     def handle_punc(text):
-        exclude = set(string.punctuation + "".join([u"‘", u"’", u"´", u"`"]))
+        exclude = set(string.punctuation + "".join([u"‘", u"’", u"´", u"`"]) + _UNICODE_DASHES)
         return ''.join(ch if ch not in exclude else ' ' for ch in text)
 
     def lower(text):

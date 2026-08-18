@@ -101,33 +101,69 @@ class MilestoneEvaluator(BasePhase):
                 'weight': 0.1
             }
         ]
-        rule_entry = assignment_rules[0].get('ruleEntry', {}) if assignment_rule_exists else {}
-        if type(rule_entry) == list:
-            rule_entry = rule_entry[0]
-        filter_conditions = rule_entry.get('criteriaItems', [])
-        if type(filter_conditions) == dict:
-            filter_conditions = [filter_conditions]
-        assignee_success = rule_entry.get('assignedTo') == params.assignee
-        if params.assignee_type == 'User':
-            assignee_success = rule_entry.get('assignedTo', '').startswith(params.assignee)
+        def _as_list(val):
+            if not val:
+                return []
+            return val if type(val) == list else [val]
+
+        rule_entries = _as_list(
+            assignment_rules[0].get('ruleEntry', {}) if assignment_rule_exists else {}
+        )
+
+        def _criteria(entry):
+            items = _as_list(entry.get('criteriaItems', []))
+            return [(item['field'], item['operation'], item['value']) for item in items]
+
+        def _assignee_ok(entry):
+            assignee_success = entry.get('assignedTo') == params.assignee
+            if params.assignee_type == 'User':
+                assignee_success = str(entry.get('assignedTo', '')).startswith(params.assignee)
+            return entry.get('assignedToType') == params.assignee_type and assignee_success
+
+        def _connector(entry):
+            return re.sub(r'\d+', '', entry.get('booleanFilter', '') or '').strip()
+
+        all_criteria = [crit for entry in rule_entries for crit in _criteria(entry)]
+        expected_conditions = [tuple(condition) for condition in params.entry_conditions]
+        expected_set = set(expected_conditions)
+
+        assignee_success = any(_assignee_ok(entry) for entry in rule_entries)
         milestones.append({
                 'milestone': f'Assign rule to {params.assignee_type} with name {params.assignee}',
-                'is_success': assignment_rule_exists and rule_entry.get('assignedToType') == params.assignee_type and assignee_success,
+                'is_success': assignment_rule_exists and assignee_success,
                 'weight': 0.2
             })
-        entry_criteria = [(item['field'], item['operation'], item['value']) for item in filter_conditions]
-        connector = rule_entry.get('booleanFilter', '')
-        connector = re.sub(r'\d+', '', connector).strip()
         score_per_condition = 0.5 / len(params.entry_conditions)
-        for condition in params.entry_conditions:
+        for condition in expected_conditions:
             milestones.append({
                 'milestone': f'Apply filter condition {condition}',
-                'is_success': tuple(condition) in entry_criteria,
+                'is_success': condition in all_criteria,
                 'weight': score_per_condition
             })
+
+        if params.logic_operator == 'AND':
+            # AND must live on a single entry (Salesforce default when booleanFilter is omitted).
+            connector_success = any(
+                expected_set.issubset(set(_criteria(entry)))
+                and _connector(entry) in ('', 'AND')
+                for entry in rule_entries
+            )
+        elif params.logic_operator == 'OR':
+            # One entry with booleanFilter OR, or multiple first-match-wins entries.
+            one_entry_or = any(
+                expected_set.issubset(set(_criteria(entry))) and _connector(entry) == 'OR'
+                for entry in rule_entries
+            )
+            split_across_entries = (
+                expected_set.issubset(set(all_criteria)) and len(rule_entries) >= 2
+            )
+            connector_success = one_entry_or or split_across_entries
+        else:
+            connector_success = False
+
         milestones.append({
             'milestone': f'Connect the conditions using {params.logic_operator}',
-            'is_success': connector == params.logic_operator or params.logic_operator == 'AND',
+            'is_success': connector_success,
             'weight': 0.2
         })
         return milestones
