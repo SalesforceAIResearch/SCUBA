@@ -168,4 +168,24 @@ def run_evaluate(task_instance_dict: dict, agent_answer: str, org_alias: str):
             'Failure Reasons': "see system failures",
             'Rubric': "N/A; since the evaluation failed"
         }
-    return evaluation_result        
+    return evaluation_result
+
+def run_baseline_check(task_instance_dict: dict, org_alias: str, task_logger: logging.Logger = logger):
+    """Defensive pre-task check: a clean org should score 0 before the agent starts.
+    A non-zero baseline suggests leftover artifacts from a prior run that could
+    inflate the final score. QA templates are skipped (they require an agent answer
+    and leave no org artifacts). Never raises; a check failure must not break the run.
+    """
+    task_id = task_instance_dict.get('task_id')
+    if str(task_instance_dict.get('query_template_name', '')).startswith('qa'):
+        return
+    try:
+        score_card = MilestoneEvaluator(org_alias).evaluate_instance(task_instance_dict)
+        if score_card.score > 0:
+            task_logger.warning(
+                f"\033[33m[PRE-TASK WARNING] Baseline score for task '{task_id}' is "
+                f"{score_card.score} (expected 0). The org may contain leftover artifacts "
+                f"from a previous run that could inflate the final score.\033[0m"
+            )
+    except Exception as e:
+        task_logger.warning(f"[PRE-TASK CHECK] Skipped baseline verification for task '{task_id}': {e}")        

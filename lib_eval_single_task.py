@@ -22,6 +22,7 @@ from agents.s2_5.agents.agent_s import AgentS2_5
 from agents.s2_5.agents.grounding import OSWorldACI
 from agents.anthropic.main import AnthropicAgent
 from envs.remote_docker_env import RemoteDesktopEnv
+from utils import run_baseline_check
 
 load_dotenv(override=True)
 logger = logging.getLogger('main_cua')
@@ -647,9 +648,11 @@ def evaluate_single_task_vllm(
     # multi-turn interaction starts here
     with open(os.path.join(trajectory_save_dir, f"initial_obs.png"), "wb") as _f:
         _f.write(obs['screenshot'])
+    if args.pretask_baseline_check:
+        run_baseline_check(task_config, args.org_alias, this_task_logger)
     try:
         if args.agent_name == 'UI-TARS-1.5':
-            agent_loop_uitars15(env, instruction, obs, task_config, this_task_logger, run_id, args, 
+            agent_loop_uitars15(env, instruction, obs, task_config, this_task_logger, run_id, args,
                                 vllm_client=vllm_client)
         elif args.agent_name == 'S2.5':
             agent_loop_s2_5(env, instruction, obs, task_config, this_task_logger, run_id, args, 
@@ -711,6 +714,8 @@ def evaluate_single_task_api(
     # multi-turn interaction starts here
     with open(os.path.join(trajectory_save_dir, f"initial_obs.png"), "wb") as _f:
         _f.write(obs['screenshot'])
+    if args.pretask_baseline_check:
+        run_baseline_check(task_config, args.org_alias, this_task_logger)
     try:
         if args.agent_name == "OpenCUA-7B":
             agent_loop_opencua7b(env, instruction, obs, task_config, this_task_logger, run_id, args)
