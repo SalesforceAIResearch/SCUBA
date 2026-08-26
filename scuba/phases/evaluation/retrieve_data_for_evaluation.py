@@ -10,7 +10,7 @@ import re
 from xmltodict import parse
 
 from scuba.phases.base_phase import BasePhase
-from scuba.helpers.salesforce_commands import run_query, get, retrieve_latest_metadata
+from scuba.helpers.salesforce_commands import run_query, get, retrieve_latest_metadata, scratch_csv_path
 from scuba.helpers.utils import create_metadata_info_xml, convert_type_to_folder_name
 
 class MetadataResult:
@@ -152,9 +152,10 @@ class DataRetriever(BasePhase):
         
         nickname = f'retrieve_data_{hash(query) % 10000}'
 
+        soql_csv = scratch_csv_path(nickname)
         try:
             run_query(query, nickname, self.org_alias)
-            df = pd.read_csv(f'{nickname}.csv')
+            df = pd.read_csv(soql_csv)
             # Convert DataFrame to list of dictionaries
             data = df.to_dict('records') if not df.empty else []
         except (pd.errors.EmptyDataError, FileNotFoundError):
@@ -163,8 +164,8 @@ class DataRetriever(BasePhase):
             print(f"Warning: Query {query} failed: {e}")
             data = []
         finally:
-            if os.path.exists(f'{nickname}.csv'):
-                os.remove(f'{nickname}.csv')
+            if os.path.exists(soql_csv):
+                os.remove(soql_csv)
         
         return SoqlQueryResult(data)
     
@@ -264,7 +265,8 @@ class DataRetriever(BasePhase):
         """
         parent_object_for_type = {
             'ListView': 'CustomObject',
-            'CustomField': 'CustomObject'
+            'CustomField': 'CustomObject',
+            'BusinessProcess': 'CustomObject'
         }
         folder_name = convert_type_to_folder_name(metadata_type)
         if '.' in member:

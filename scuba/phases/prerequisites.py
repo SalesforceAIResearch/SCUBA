@@ -2,8 +2,9 @@
 This file handles the prerequisites phase of the CRM benchmark pipeline.
 It contains functions to check and install prerequisites required for each benchmark scenario.
 """
+import traceback
 from datetime import datetime,timedelta
-
+import logging
 import pandas as pd
 import glob
 import random
@@ -15,8 +16,10 @@ import threading
 from tqdm import tqdm
 from scuba.phases.base_phase import BasePhase
 from scuba.helpers.utils import convert_type_to_folder_name, create_metadata_info_xml
-from scuba.helpers.salesforce_commands import deploy, post, patch, does_data_exist, authorize_using_access_token, create_project_if_not_exists, run_query
+from scuba.helpers.salesforce_commands import deploy, post, patch, does_data_exist, authorize_using_access_token, create_project_if_not_exists, run_query, scratch_csv_path
 
+logger = logging.getLogger(__name__)
+logger.propagate = True
 
 PREREQUISITES_FOLDER = 'scuba/prerequisites'
 object_unique_keys_map = {
@@ -55,18 +58,19 @@ class Prerequisites(BasePhase):
         self.__install_prerequisite_data()
 
     def __install_prerequisite_metadata(self):
-        package_changes_types_and_members = {}
+
         self.types_and_members.update({
             'Settings': ['Knowledge', 'ServiceSetupAssistant', 'Quote', 'Entitlement']
         })
         for type, members in self.types_and_members.items():
+            package_changes_types_and_members={}
             folder_name_for_type = convert_type_to_folder_name(type)
             for member in members:
                 pattern_to_search = f"{PREREQUISITES_FOLDER}/metadata/{folder_name_for_type}/{member}*"
                 files = glob.glob(pattern_to_search, recursive=False)
                 destination_dir = os.path.join(self.modified_metadata_details_dir, folder_name_for_type)
                 if len(files) != 1 and member !='*':
-                    print(f'There should be exactly one file matching {pattern_to_search}')
+                    logger.info(f'There should be exactly one file matching {pattern_to_search}')
                 else:
                     if type != 'CustomField':
                         os.makedirs(destination_dir, exist_ok=True)
@@ -80,22 +84,26 @@ class Prerequisites(BasePhase):
                             shutil.copytree(files[0], os.path.join(str(destination_dir), os.path.basename(files[0])), dirs_exist_ok=True)
                     package_changes_types_and_members.setdefault(type, [])
                     package_changes_types_and_members[type].append(member)
-        if package_changes_types_and_members:
-            create_metadata_info_xml(package_changes_types_and_members, self.manifest_dir, is_destructive=False)
-            create_metadata_info_xml({}, self.manifest_dir, is_destructive=True)
-            deploy(self.modified_orgs_dir, self.org_alias)
+            if package_changes_types_and_members:
+                create_metadata_info_xml(package_changes_types_and_members, self.manifest_dir, is_destructive=False)
+                create_metadata_info_xml({}, self.manifest_dir, is_destructive=True)
+                try:
+                    deploy(self.modified_orgs_dir, self.org_alias)
+                except Exception as e:
+                    logger.error(traceback.format_exc())
 
     def __get_id_for_dependency(self, object_name, field, value_name):
         soql = f"SELECT Id FROM {object_name} WHERE {field} = {value_name}"
         nickname = object_name + '_' + value_name.replace(' ', '_').replace('\'', '')
         run_query(soql, nickname, self.org_alias)
+        dependency_csv = scratch_csv_path(nickname)
         try:
-            df = pd.read_csv(f'{nickname}.csv')
+            df = pd.read_csv(dependency_csv)
         except pd.errors.EmptyDataError as e:
-            os.remove(f'{nickname}.csv')
+            os.remove(dependency_csv)
             return False, None
-        if os.path.exists(f'{nickname}.csv'):
-            os.remove(f'{nickname}.csv')
+        if os.path.exists(dependency_csv):
+            os.remove(dependency_csv)
         return True, df['Id'].values.tolist()[0]
 
     def __check_prerequisities_in_existing_data(self, object_name, record):
@@ -110,11 +118,15 @@ class Prerequisites(BasePhase):
         data_exists, id = self.__check_prerequisities_in_existing_data(object_name, record)
         info = {key: record[key] for key in object_unique_keys_map.get(object_name)}
         if data_exists:
-            print(f'{object_name} {info} already exists in org {self.org_alias} with ID: {id}. Patching...')
-            patch(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}/{id}', record)
+            logger.info(f'{object_name} {info} already exists in org {self.org_alias} with ID: {id}. Patching...')
+            status, details = patch(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}/{id}', record)
+            if not status:
+                logger.error(f'Patching {object_name} {info} failed. Details: {details}')
         else:
-            print(f'{object_name} {info} does not exist in org {self.org_alias}. Creating...')
-            post(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}', record)
+            logger.info(f'{object_name} {info} does not exist in org {self.org_alias}. Creating...')
+            status, details = post(self.org_alias, f'/services/data/v62.0/sobjects/{object_name}', record)
+            if not status:
+                logger.error(f'Prerequisite {object_name} {info} failed. Details: {details}')
 
     def __create_records(self, object_name, records):
         threads = []
@@ -129,7 +141,9 @@ class Prerequisites(BasePhase):
     def __generate_pricebook_records(self, products_filepath, pricebook_entry_filepath):
         data = json.load(open(products_filepath))
         _, pricebook_id = self.__get_id_for_dependency('Pricebook2', 'IsStandard', 'true')
-        patch(self.org_alias, f'/services/data/v62.0/sobjects/Pricebook2/{pricebook_id}', {'IsActive': True})
+        status, details = patch(self.org_alias, f'/services/data/v62.0/sobjects/Pricebook2/{pricebook_id}', {'IsActive': True})
+        if not status:
+            logger.error(f'Failed to activate standard pricebook. Details: {details}')
         pricebook_entry_records = []
         for record in data:
             product_name = record['Name']
@@ -159,7 +173,7 @@ class Prerequisites(BasePhase):
         self.__post_record(object_name1, to_post)
         exists, id = self.__get_id_for_dependency(object_name1, 'Name', f'\'{coupled_record[object_name1]["Name"]}\'')
         if not exists:
-            print(f'Posting {object_name1}: {coupled_record[object_name1]["Name"]} failed.')
+            logger.info(f'Posting {object_name1}: {coupled_record[object_name1]["Name"]} failed.')
             return
         to_post = coupled_record[object_name2].copy()
         if type(to_post) == dict:
@@ -184,21 +198,33 @@ class Prerequisites(BasePhase):
         soql=f"SELECT Id FROM User WHERE Profile.Name='System Administrator'"
         nickname= 'admin_users'
         run_query(soql,nickname,self.org_alias)
+        # Read back the query output from the lane-local scratch dir (matches
+        # where run_query writes via scratch_csv_path). A bare '{nickname}.csv'
+        # here resolves to the CWD and fails when SCUBA_SCRATCH_DIR is set.
+        admin_users_csv = scratch_csv_path(nickname)
         try:
-            df=pd.read_csv(f'{nickname}.csv')
+            df=pd.read_csv(admin_users_csv)
             user_ids = df['Id'].values.tolist()
         except pd.errors.EmptyDataError as e:
-            os.remove(f'{nickname}.csv')
+            os.remove(admin_users_csv)
             user_ids = []
-        if os.path.exists(f'{nickname}.csv'):
-            os.remove(f'{nickname}.csv')
+        if os.path.exists(admin_users_csv):
+            os.remove(admin_users_csv)
         for id in user_ids:
             endpoint = f'/services/data/v62.0/sobjects/User/{id}'
-            patch(self.org_alias, endpoint, {'UserPermissionsMarketingUser': True,
+            status, details = patch(self.org_alias, endpoint, {'UserPermissionsMarketingUser': True,
             'UserPermissionsKnowledgeUser': True})
+            if not status:
+                logger.error(f'Failed to add marketing and knowledge permissions to user {id}.')
 
     def __install_prerequisite_data(self):
         objects = self.data_prerequisites.get('objects', [])
+        # PricebookEntry records are generated by looking up existing Product2 IDs,
+        # so Product2 must be created first. Reorder if necessary.
+        if 'PricebookEntry' in objects and 'Product2' in objects:
+            if objects.index('PricebookEntry') < objects.index('Product2'):
+                objects.remove('PricebookEntry')
+                objects.append('PricebookEntry')
         for o in objects:
             filepath = f"{PREREQUISITES_FOLDER}/data/bulk_data/{o}.json"
             if o == 'User':

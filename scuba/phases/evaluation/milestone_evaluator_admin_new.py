@@ -59,12 +59,17 @@ class MilestoneEvaluator(BasePhase):
 
         formula = validation_rule_exists and validation_rule_info[0]["Metadata"].get("errorConditionFormula")
         error_message = validation_rule_exists and validation_rule_info[0].get("ErrorMessage")
+        expected_formula = params.error_condition_formula
+        formula_matches = bool(formula) and (
+            formula == expected_formula
+            or ('!=' in (expected_formula or '') and formula == expected_formula.replace('!=', '<>'))
+        )
         milestones = [
             {'milestone': f'Create validation rule on the {params.object_name} object',
              'is_success': validation_rule_exists,
              'weight': 0.2},
             {'milestone': f'Add correct formula',
-             'is_success': formula and formula == params.error_condition_formula,
+             'is_success': formula_matches,
              'weight': 0.5},
             {'milestone': f'Add correct error message',
              'is_success': error_message and error_message == params.error_message,
@@ -105,7 +110,13 @@ class MilestoneEvaluator(BasePhase):
         custom_values = global_value_set_metadata.get('customValue', [])
         if type(custom_values) == dict:
             custom_values = [custom_values]
-        items = [item['fullName'] for item in custom_values]
+
+        def _is_active(item):
+            is_active = item.get('isActive', True)
+            return str(is_active).lower() not in ('false', '0')
+
+        active_items = [item['fullName'] for item in custom_values if _is_active(item)]
+        expected_items = [val.strip() for val in params.comma_separated_values.split(',')]
         milestones = [
             {
                 'milestone': f'Create global value set with name {params.value_set_name}',
@@ -113,9 +124,14 @@ class MilestoneEvaluator(BasePhase):
                 'weight': 0.3
             },
             {
-                'milestone': f'Add the list of items correctly to the global value set',
-                'is_success': items == [val.strip() for val in params.comma_separated_values.split(',')],
-                'weight': 0.7
+                'milestone': f'Add the list items correctly to the global value set',
+                'is_success': set(active_items) == set(expected_items),
+                'weight': 0.4
+            },
+            {
+                'milestone': f'Maintain correct order of list items',
+                'is_success': active_items == expected_items,
+                'weight': 0.3
             }
         ]
         return milestones
